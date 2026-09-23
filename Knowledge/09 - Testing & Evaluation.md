@@ -13,10 +13,13 @@ Quantitative experimental evaluation against ISO/IEC 25010, 23053:2022, and 2502
 `admin-ui` (the sole admin UI) has no automated test suite. Verification so
 far, per `admin-ui/CLAUDE.md`: manual click-through in a live browser —
 dashboard, filters, search, category tabs, empty/no-results states, event
-detail with available/unavailable evidence, simulated video playback, head
-count recording, detection toggle (persists across navigation), all three
-Insights & Statistics tabs, light/dark theme toggle, and responsive/mobile
-layout.
+detail with available/unavailable evidence, simulated video playback, the
+scheduled head-count status cards, detection toggle (persists across
+navigation), all three Insights & Statistics tabs, light/dark theme
+toggle, and responsive/mobile layout. ("Manual click-through" here means
+*how the UI itself was tested* by a person — unrelated to the
+now-removed manual head-count entry feature; see
+[[Manual Head-Count Entry Removed]].)
 
 The automated head-count scheduler ([[Automated Head-Count Scheduler]]) has
 its own dedicated test mechanism, since it can't practically be tested by
@@ -44,3 +47,4 @@ Planned evaluation: **Not Yet Implemented**. Actual UI testing:
 - [[Methodology]]
 - [[04 - Computer Vision]]
 - [[Automated Head-Count Scheduler]]
+- [[Manual Head-Count Entry Removed]]

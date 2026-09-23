@@ -21,9 +21,12 @@ Three tables (`admin-ui/backend/db.py`'s `SCHEMA` string is the source of truth 
 - `events` — see [[Event Model]] for the full column list and category values.
 - `head_counts` — aggregate student head counts at the beginning/end of a
   class session: `class_date`, `point` IN (`start`, `end`), `count`,
-  `recorded_at`, and `source` IN (`manual`, `scheduled`) — added when the
-  automated scheduler (below) was built, defaults to `manual` for rows
-  written by the hand-entry form. Aggregate only, no per-student data.
+  `recorded_at`, and `source` IN (`manual`, `scheduled`), defaulting to
+  `scheduled`. The `manual` value is only ever seen on rows written before
+  2026-09-24 (backfilled by the migration below) — the manual-entry
+  workflow that produced it was removed; every row written today is
+  `scheduled` — see [[Manual Head-Count Entry Removed]]. Aggregate only, no
+  per-student data.
 - `detection_state` — single row (`id = 1`) persisting whether
   detection/event-generation is enabled (`enabled`, `updated_at`). Gates
   event generation only, independent of cameras/monitoring/head counting.
@@ -33,9 +36,10 @@ A background daemon thread (`admin-ui/backend/scheduler.py`, started once
 from `create_app()`) writes `head_counts` rows automatically at two
 configured times, with `source = 'scheduled'` — see
 [[Automated Head-Count Scheduler]] for the full design (trigger logic,
-missed-event/startup handling, daily reset, testing). The manual-entry API
-route and the scheduler both go through the same `db.upsert_head_count()`
-helper, just with a different `source` argument — one write path, not two.
+missed-event/startup handling, daily reset, testing). It is the **only**
+writer of `head_counts` rows: a manual-entry API route existed briefly and
+was removed — see [[Manual Head-Count Entry Removed]]. `GET /api/headcounts`
+still exists to read history.
 
 ## Lifecycle
 - `init_db()` creates all tables if missing (idempotent, `CREATE TABLE IF NOT EXISTS`), ensures a default `detection_state` row exists, and runs `_migrate_head_counts_source_column()`.
@@ -60,5 +64,6 @@ see [[12 - Open Questions]].
 ## Related
 - [[Event Model]]
 - [[Automated Head-Count Scheduler]]
+- [[Manual Head-Count Entry Removed]]
 - [[Two Admin UI Prototypes]]
 - [[Evidence System]]

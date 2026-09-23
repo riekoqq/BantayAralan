@@ -113,14 +113,16 @@ def seed_headcounts(force: bool = False, sessions: int = 10, seed_value: int = 2
         class_date = (today - timedelta(days=days_ago)).isoformat()
         start_count = rng.randint(24, 32)
         end_count = max(0, start_count - rng.randint(0, 4))
-        rows.append((class_date, "start", start_count, f"{class_date}T07:55:00"))
-        rows.append((class_date, "end", end_count, f"{class_date}T15:10:00"))
+        # source='scheduled' -- head counts are exclusively automated now,
+        # so seeded history should read the same way real history would.
+        rows.append((class_date, "start", start_count, f"{class_date}T07:55:00", "scheduled"))
+        rows.append((class_date, "end", end_count, f"{class_date}T15:10:00", "scheduled"))
 
     with connection() as conn:
         if force:
             conn.execute("DELETE FROM head_counts")
         conn.executemany(
-            "INSERT INTO head_counts (class_date, point, count, recorded_at) VALUES (?, ?, ?, ?)",
+            "INSERT INTO head_counts (class_date, point, count, recorded_at, source) VALUES (?, ?, ?, ?, ?)",
             rows,
         )
 

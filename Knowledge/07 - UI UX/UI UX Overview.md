@@ -20,7 +20,7 @@ for the requirement-style list.
 - Event Detail shows screenshot evidence and video evidence in separate tabs.
 - Every event card/row shows category, date/time, and a short description.
 - **No live camera feed on the Dashboard** — Dashboard shows summaries and recent events only. This is called out explicitly as a constraint to preserve in `admin-ui/CLAUDE.md`.
-- Head Count is **aggregate only** — beginning/end-of-class counts, no per-student rows, names, or IDs. Recorded either automatically by a background scheduler at configured times, or manually via a form — see [[Automated Head-Count Scheduler]].
+- Head Count is **aggregate only** — beginning/end-of-class counts, no per-student rows, names, or IDs. Recorded exclusively by a background scheduler at configured times — no manual-entry form exists — see [[Automated Head-Count Scheduler]] and [[Manual Head-Count Entry Removed]].
 - Copy avoids real-time-alert framing — continuous monitoring reviewed periodically (events/reports), not instant alerts.
 - One classroom only — no multi-classroom/multi-camera selector.
 - Category badges are never color-only — always icon + text label.
@@ -41,4 +41,5 @@ for the requirement-style list.
 - [[Two Admin UI Prototypes]] (historical)
 - [[Event Model]]
 - [[Automated Head-Count Scheduler]]
+- [[Manual Head-Count Entry Removed]]
 - [[12 - Open Questions]]

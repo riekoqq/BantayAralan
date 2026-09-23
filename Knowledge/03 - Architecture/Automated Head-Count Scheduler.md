@@ -9,8 +9,10 @@ status: Implemented
 a background thread that automatically records the beginning-of-class and
 end-of-class aggregate head counts at configured times, with no button
 click required. Added after the initial Head Count feature (which was
-manual-entry only); see [[Web Application as Sole Admin UI]] for when Head
-Count itself was introduced.
+manual-entry only; see [[Web Application as Sole Admin UI]] for when Head
+Count itself was introduced). Manual entry was later removed entirely —
+see [[Manual Head-Count Entry Removed]] — so this scheduler is now the
+sole source of `head_counts` rows.
 
 ## Why this exists
 
@@ -102,9 +104,11 @@ would need is an explicitly open question — see [[12 - Open Questions]].
   `scheduler.get_schedule_status()`) — for each configured event: `key`,
   `label`, `scheduled_time`, `status` (`waiting` / `performing` /
   `complete` / `missed`), `detected_count`, `recorded_at`, `source`.
-- The existing `GET`/`POST /api/headcounts` (manual entry) and this route
-  share the same underlying `head_counts` table and `db.upsert_head_count()`
-  helper — see [[06 - Database]].
+- `GET /api/headcounts` (read-only history list) and this route share the
+  same underlying `head_counts` table and `db.upsert_head_count()` helper —
+  see [[06 - Database]]. There is no longer a `POST /api/headcounts` route;
+  manual entry was removed 2026-09-24 — see
+  [[Manual Head-Count Entry Removed]].
 
 ## Frontend
 
@@ -115,9 +119,10 @@ interval self-cancels via a `document.body.contains(root)` check once the
 user navigates away — the app has no per-view cleanup hook otherwise, see
 [[UI UX Overview]]). Cards show Expected (always blank — no expected-count
 feature exists, don't invent one), Detected, Scheduled Time, and Status.
-The manual-entry form is kept alongside for correcting/overriding a count
-by hand. The sidebar status box (`renderStatusBox()` in
-`admin-ui/frontend/js/app.js`) also shows a one-line summary of today's
+There is no manual-entry form anymore — see
+[[Manual Head-Count Entry Removed]] — so this is the only way a
+`head_counts` row gets written. The sidebar status box (`renderStatusBox()`
+in `admin-ui/frontend/js/app.js`) also shows a one-line summary of today's
 scheduler state on every page.
 
 ## Testing without waiting for 11:15 AM / 2:45 PM
@@ -137,6 +142,7 @@ duplicate-count handling for an actual detector — see
 ## Related
 - [[06 - Database]]
 - [[Web Application as Sole Admin UI]]
+- [[Manual Head-Count Entry Removed]]
 - [[04 - Computer Vision]]
 - [[12 - Open Questions]]
 - [[UI UX Overview]]

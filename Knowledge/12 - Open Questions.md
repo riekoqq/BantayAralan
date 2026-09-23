@@ -19,8 +19,8 @@ Unresolved items surfaced while migrating project context. None of these should 
 
 ## Head-count duplicate-counting / individual-distinction mechanism
 - `Prototype Paper Changes.md` open issue 2: no technique is specified for avoiding double-counting or distinguishing students within a camera frame while keeping the count aggregate-only.
-- `admin-ui`'s current implementation uses a placeholder policy (last recorded value per date+point wins, via `db.upsert_head_count()`) for both its manual-entry form and its automated scheduler (`backend/scheduler.py`, see [[Automated Head-Count Scheduler]]) — the scheduler's captured value is itself a random placeholder, not a real detection. Neither is a proposed answer to the real detection-side question.
-- Related: [[Admin UI (Browser Prototype)]], [[Automated Head-Count Scheduler]], `admin-ui/CLAUDE.md`
+- `admin-ui`'s current implementation uses a placeholder policy (last recorded value per date+point wins, via `db.upsert_head_count()`) inside its automated scheduler (`backend/scheduler.py`, see [[Automated Head-Count Scheduler]]) — the sole writer of `head_counts` rows since manual entry was removed (see [[Manual Head-Count Entry Removed]]). The scheduler's captured value is itself a random placeholder, not a real detection — this is not a proposed answer to the real detection-side question.
+- Related: [[Admin UI (Browser Prototype)]], [[Automated Head-Count Scheduler]], [[Manual Head-Count Entry Removed]], `admin-ui/CLAUDE.md`
 
 ## Statistical/pattern-analysis methodology for insights & suggestions
 - `Prototype Paper Changes.md` open issue 3: no formula, threshold, or analysis frequency is defined for turning accumulated event history into classroom insights and suggestions.

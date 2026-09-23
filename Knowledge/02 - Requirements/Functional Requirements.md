@@ -26,8 +26,7 @@ See [[04 - Computer Vision]] and [[Event Model]].
 | Dashboard: summary stats, recent events, category breakdown | Implemented (mock data) | `admin-ui/frontend/js/views/dashboard.js` |
 | Events & Logs: filter by category/date range, search, sort | Implemented (mock data) | `admin-ui/backend/app.py` `list_events` |
 | Event Detail: description, timestamp, screenshot tab, video tab | Implemented (mock/simulated evidence) | `admin-ui/frontend/js/views/eventDetail.js` |
-| Head Count: aggregate beginning/end-of-class counts, manual entry | Implemented (real form, seeded + user-entered data) | `admin-ui/frontend/js/views/headcount.js`, `/api/headcounts` |
-| Head Count: automatic scheduled triggering (no button press) | Implemented (real trigger/storage/status logic; captured *value* is a placeholder, no detector yet) | `admin-ui/backend/scheduler.py`, `schedule_config.py`, `/api/headcount-schedule` — see [[Automated Head-Count Scheduler]] |
+| Head Count: aggregate beginning/end-of-class counts, automatic scheduled triggering (no button press, no manual entry) | Implemented (real trigger/storage/status logic; captured *value* is a placeholder, no detector yet) | `admin-ui/backend/scheduler.py`, `schedule_config.py`, `/api/headcount-schedule`, `/api/headcounts` (GET only) — see [[Automated Head-Count Scheduler]], [[Manual Head-Count Entry Removed]] |
 | Detection Enable/Disable | Implemented (real, persisted; no pipeline to actually gate yet) | `admin-ui/frontend/js/app.js` `renderStatusBox()`, `/api/detection-state` |
 | Statistics / Classroom Insights / Suggestions | Implemented (real aggregation + simple rule-based logic over mock data) | `admin-ui/frontend/js/views/insights.js`, `/api/statistics`, `/api/insights`, `/api/suggestions` |
 | Dark Mode toggle | Implemented (real, persisted per-browser, instant apply, centralized CSS tokens) | `admin-ui/frontend/js/theme.js`, `frontend/css/tokens.css` |
@@ -35,10 +34,10 @@ See [[04 - Computer Vision]] and [[Event Model]].
 
 ## Status
 **Mixed** — see each row. `admin-ui/` implements the *review/browse/record*
-side of the system against synthetic (and some user-entered) data; none of
-the *detection* side exists. A separate `desktop-app/` prototype
-implemented the same three original screens and was removed 2026-09-23 —
-see [[Web Application as Sole Admin UI]].
+side of the system against synthetic data; none of the *detection* side
+exists. A separate `desktop-app/` prototype implemented the same three
+original screens and was removed 2026-09-23 — see
+[[Web Application as Sole Admin UI]].
 
 ## Related
 - [[Research Questions & Objectives]]
@@ -46,3 +45,4 @@ see [[Web Application as Sole Admin UI]].
 - [[04 - Computer Vision]]
 - [[Non-Functional Requirements]]
 - [[Automated Head-Count Scheduler]]
+- [[Manual Head-Count Entry Removed]]

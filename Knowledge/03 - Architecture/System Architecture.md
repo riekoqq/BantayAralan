@@ -39,8 +39,9 @@ flowchart TB
     end
 ```
 
-Implements Dashboard, Events & Logs, Event Detail, Head Count (manual +
-automated via the background scheduler thread), and Insights & Statistics
+Implements Dashboard, Events & Logs, Event Detail, Head Count (automated
+only, via the background scheduler thread — no manual entry), and
+Insights & Statistics
 (Statistics / Classroom Insights / Suggestions), plus a Detection
 Enable/Disable control and a light/dark theme, against the mock schema in
 [[06 - Database]]. The scheduler thread is the one part of this diagram
@@ -81,4 +82,5 @@ layer (not implemented); UI/data layer is **Implemented** in `admin-ui/`.
 - [[06 - Database]]
 - [[Event Model]]
 - [[Automated Head-Count Scheduler]]
+- [[Manual Head-Count Entry Removed]]
 - [[UI UX Overview]]

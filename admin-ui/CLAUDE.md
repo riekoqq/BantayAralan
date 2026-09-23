@@ -22,12 +22,15 @@ anywhere — per the design brief this was built from.
 
 ## Newer sections (added for the finalized prototype paper direction)
 
-- **Head Count** (`frontend/js/views/headcount.js`, `/api/headcounts`,
-  `head_counts` table) — **aggregate** student counts at the beginning and
-  near the end of a class session only. Never add per-student rows, names,
-  or IDs here. Recording is a real manual-entry form (there's no camera
-  pipeline to auto-populate it yet); duplicate handling is a placeholder
-  policy (last recorded value per date+point wins) — see
+- **Head Count** (`frontend/js/views/headcount.js`, `/api/headcounts` (GET
+  only), `head_counts` table) — **aggregate** student counts at the
+  beginning and near the end of a class session only. Never add
+  per-student rows, names, or IDs here. Recorded exclusively by the
+  automated scheduler (below) — there is no manual-entry UI or API route
+  anymore (removed 2026-09-24; see
+  [Knowledge/11 - Decisions/Manual Head-Count Entry Removed.md](<../Knowledge/11 - Decisions/Manual Head-Count Entry Removed.md>)).
+  Duplicate handling is a placeholder policy (last recorded value per
+  date+point wins) — see
   [Knowledge/12 - Open Questions.md](<../Knowledge/12 - Open Questions.md>).
 - **Detection Enable/Disable** (`renderStatusBox()` in `app.js`,
   `/api/detection-state`, `detection_state` table) — a real, persisted
@@ -101,8 +104,9 @@ paper's Head Count requirement. Design, in one place per concern:
   pipeline in this repo (see Context in root `CLAUDE.md`). Swap that one
   function for a real call once a detector exists; nothing else needs to
   change. The resulting row is written via `db.upsert_head_count(...,
-  source="scheduled")`, the exact same helper the manual-entry API route
-  uses with `source="manual"` — one storage path, not two.
+  source="scheduled")` — the scheduler is now the *only* caller of this
+  helper (a manual-entry API route existed briefly and was removed
+  2026-09-24, see [Knowledge/11 - Decisions/Manual Head-Count Entry Removed.md](<../Knowledge/11 - Decisions/Manual Head-Count Entry Removed.md>)).
 - **Expected vs. detected**: the GUI only ever shows a detected count.
   There is no expected-student-count feature anywhere in this repo — don't
   invent one; `scheduleCardHtml()` in `headcount.js` hardcodes an em-dash
@@ -118,15 +122,18 @@ paper's Head Count requirement. Design, in one place per concern:
   routes and calls `init_db()` + `seed()` on startup (idempotent — `seed()`
   no-ops if the DB already has rows). Routes: `/api/summary`, `/api/status`,
   `/api/events`, `/api/events/<id>`, `/api/events/<id>/snapshot.svg`,
-  `/api/detection-state` (GET/POST), `/api/headcounts` (GET/POST),
+  `/api/detection-state` (GET/POST), `/api/headcounts` (GET only — read
+  history; no manual-entry write path anymore),
   `/api/headcount-schedule` (GET — today's scheduled-event status),
   `/api/statistics`, `/api/insights`, `/api/suggestions`. `create_app()`
   also starts the background scheduler (`scheduler.start()`).
 - **DB**: `backend/db.py` — plain `sqlite3`, three tables: `events`,
-  `head_counts` (now with a `source` column, `'manual'` or `'scheduled'`,
-  migrated in automatically for pre-existing DB files), `detection_state`
-  (see that file for the exact schema rather than duplicating it here).
-  Lives at `data/bantayaralan.db`, created on first run.
+  `head_counts` (has a `source` column, `'manual'` or `'scheduled'` — the
+  schema still allows `'manual'` for historical/flexibility reasons, but no
+  code path writes it anymore; every row is `'scheduled'` going forward),
+  `detection_state` (see that file for the exact schema rather than
+  duplicating it here). Lives at `data/bantayaralan.db`, created on first
+  run.
 - **Scheduling**: `backend/schedule_config.py` (times) +
   `backend/scheduler.py` (the background thread/trigger logic) — see
   "Automated head-count scheduler" above.

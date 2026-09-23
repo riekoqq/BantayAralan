@@ -42,7 +42,7 @@ Design and develop a computer-vision-based behavior detection system that identi
 - **Hardware** (proposed): ceiling-mounted camera, top-down camera, processing PC — [[08 - Hardware]].
 - **Computer vision pipeline** (proposed): YOLO11m + ByteTrack + behavior/alignment logic — [[04 - Computer Vision]].
 - **Event & evidence system** (proposed + partially prototyped in UI): [[Event Model]], [[Evidence System]].
-- **Head count** (aggregate, automated + manual): [[Automated Head-Count Scheduler]].
+- **Head count** (aggregate, automated only — no manual entry): [[Automated Head-Count Scheduler]].
 - **Database**: SQLite — [[06 - Database]].
 - **Admin UI**: one web application (`admin-ui/`) — [[UI UX Overview]].
 

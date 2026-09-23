@@ -9,7 +9,6 @@ from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory, Response
 
-from . import db
 from . import scheduler
 from .db import connection, init_db, CATEGORY_LABELS
 from .seed import seed
@@ -121,22 +120,9 @@ def create_app():
         sessions_list = sorted(sessions.values(), key=lambda s: s["class_date"], reverse=True)[:limit]
         return jsonify({"sessions": sessions_list})
 
-    @app.post("/api/headcounts")
-    def record_headcount():
-        data = request.get_json(silent=True) or {}
-        point = data.get("point")
-        count = data.get("count")
-        class_date = data.get("class_date") or datetime.now().date().isoformat()
-        if point not in ("start", "end") or not isinstance(count, int) or isinstance(count, bool) or count < 0:
-            return jsonify({
-                "error": "invalid_input",
-                "message": "point must be 'start' or 'end' and count must be a non-negative integer.",
-            }), 400
-        # Manual entry -- overrides any scheduled reading for the same
-        # (date, point). Placeholder duplicate-count policy: last write
-        # wins. See Knowledge/12 - Open Questions.md.
-        now = db.upsert_head_count(class_date, point, count, source="manual")
-        return jsonify({"class_date": class_date, "point": point, "count": count, "recorded_at": now}), 201
+    # Manual head-count entry has been removed -- all head_counts rows now
+    # come exclusively from the automated scheduler (backend/scheduler.py).
+    # See Knowledge/03 - Architecture/Automated Head-Count Scheduler.md.
 
     # ------------------------------------------- automated head-count schedule
     @app.get("/api/headcount-schedule")

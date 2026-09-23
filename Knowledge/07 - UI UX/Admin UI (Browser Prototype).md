@@ -11,7 +11,7 @@ status: Implemented
 Flask backend (`backend/app.py`) serving a small JSON API + static frontend; plain HTML/CSS/JS frontend (`frontend/`) with hash-based routing (`#/dashboard`, `#/events`, `#/events/<id>`, `#/headcount`, `#/insights`), no build step, no framework.
 
 ## Screens
-Dashboard, Events & Logs, Event Detail, Head Count (aggregate start/end-of-class counts — automatically scheduled, plus a manual-entry form; see [[Automated Head-Count Scheduler]]), and Insights & Statistics (Statistics / Classroom Insights / Suggestions tabs), plus a Detection Enable/Disable control and a dark-mode toggle in the sidebar. See [admin-ui/CLAUDE.md](../../admin-ui/CLAUDE.md) for the routes/tables behind each.
+Dashboard, Events & Logs, Event Detail, Head Count (aggregate start/end-of-class counts — automatically scheduled only, no manual-entry form; see [[Automated Head-Count Scheduler]] and [[Manual Head-Count Entry Removed]]), and Insights & Statistics (Statistics / Classroom Insights / Suggestions tabs), plus a Detection Enable/Disable control and a dark-mode toggle in the sidebar. See [admin-ui/CLAUDE.md](../../admin-ui/CLAUDE.md) for the routes/tables behind each.
 
 ## Two run modes, one codebase
 - `run_web.py` — plain browser tab, `http://127.0.0.1:5057`.
@@ -34,3 +34,4 @@ was primary for a period and was removed 2026-09-23; see
 - [[06 - Database]]
 - [[Evidence System]]
 - [[Automated Head-Count Scheduler]]
+- [[Manual Head-Count Entry Removed]]

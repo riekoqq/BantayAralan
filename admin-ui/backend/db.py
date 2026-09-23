@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS head_counts (
     point TEXT NOT NULL CHECK (point IN ('start', 'end')),
     count INTEGER NOT NULL,
     recorded_at TEXT NOT NULL,          -- ISO 8601 timestamp
-    source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'scheduled'))
+    source TEXT NOT NULL DEFAULT 'scheduled' CHECK (source IN ('manual', 'scheduled'))
 );
 
 -- Single persisted row: whether detection/event-generation is enabled.
@@ -106,10 +106,12 @@ def is_seeded() -> bool:
 
 
 # ------------------------------------------------------------- head counts
-def upsert_head_count(class_date: str, point: str, count: int, source: str = "manual") -> str:
+def upsert_head_count(class_date: str, point: str, count: int, source: str = "scheduled") -> str:
     """Record one head-count reading, replacing any prior reading for the
     same (class_date, point). Last write wins -- see
     Knowledge/12 - Open Questions.md (duplicate-count handling is open).
+    Head counts are recorded exclusively by the automated scheduler
+    (backend/scheduler.py) -- there is no manual-entry caller anymore.
     Returns the recorded_at timestamp.
     """
     now = datetime.now().isoformat(timespec="seconds")

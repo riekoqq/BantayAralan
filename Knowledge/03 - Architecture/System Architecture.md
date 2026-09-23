@@ -27,25 +27,49 @@ flowchart LR
 None of this — capture, YOLO11m, ByteTrack, behavior/alignment logic, or live event generation — exists as code in this repository. See [[04 - Computer Vision]].
 
 ## 2. Current implemented architecture (Implemented, UI-only)
-Two independent, unconnected admin-UI prototypes, each generating and consuming its own mock data — no shared backend, no detection pipeline behind either:
+One admin-UI web application, generating and consuming its own mock data — no real backend, no detection pipeline behind it. (A second, parallel `desktop-app/` prototype existed through 2026-09-23 and was removed once the finalized prototype paper settled the direction as web-only — see [[Two Admin UI Prototypes]], now historical.)
 
 ```mermaid
 flowchart TB
-    subgraph adminui [admin-ui - browser prototype]
-        SeedA[backend/seed.py] --> DBA[(SQLite: data/bantayaralan.db)]
-        DBA --> Flask[Flask API - backend/app.py]
+    subgraph adminui [admin-ui - web application]
+        Seed[backend/seed.py] --> DB[(SQLite: data/bantayaralan.db - events, head_counts, detection_state)]
+        DB --> Flask[Flask API - backend/app.py]
         Flask --> FE[Vanilla JS/HTML/CSS frontend]
-    end
-    subgraph desktopapp [desktop-app - native prototype]
-        SeedB[app/data.py: seed] --> DBB[(SQLite: data/bantayaralan.db)]
-        DBB --> Qt[PySide6 views - app/views.py]
     end
 ```
 
-Both prototypes implement the same three screens (Dashboard, Events & Logs, Event Detail) against the same event schema ([[06 - Database]]), but as **two separate codebases** — see [[Two Admin UI Prototypes]] for why both exist and which is primary.
+Implements Dashboard, Events & Logs, Event Detail, Head Count, and
+Insights & Statistics (Statistics / Classroom Insights / Suggestions),
+plus a Detection Enable/Disable control, against the mock schema in
+[[06 - Database]].
+
+## 1b. Finalized prototype paper's revised pipeline (Expected by current working draft — UI layer implemented, CV layer not)
+From `BantayAralan-Prototype-Paper` (see `Prototype Paper Changes.md`) — resolves open issue 1 (web, not desktop) and adds head count, the detection toggle, and the statistics/insights/suggestions pipeline. The web-app/data-layer half of this is now implemented in `admin-ui/`; the camera/detection half is still section 1 (not implemented):
+
+```text
+Camera Input
+      -> Continuous Monitoring / Processing
+      -> Configured Detection
+      -> Detected Condition
+      -> Recorded Event + Screenshot/Video Evidence
+      -> Accumulated Event History
+      -> Statistical / Pattern Analysis
+      -> Classroom Insights
+      -> Suggestions / Recommendations
+      -> Web Application / Reports
+
+Beginning of Class -> Aggregate Student Head Count
+Before End of Class -> Aggregate Student Head Count      (independent of the above)
+
+Enable Detection / Disable Detection -> Configured Detection / Event Generation
+      (cameras and continuous monitoring/processing stay independent of this toggle)
+```
 
 ## Status
-Section 1: **Proposal Requirement**. Section 2: **Implemented**.
+Section 1: **Proposal Requirement** (original proposal, unimplemented).
+Section 2: **Implemented** (UI/data layer only).
+Section 1b: **Expected by current working draft** for the CV/detection
+layer (not implemented); UI/data layer is **Implemented** in `admin-ui/`.
 
 ## Related
 - [[04 - Computer Vision]]

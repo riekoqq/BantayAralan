@@ -18,7 +18,7 @@ Current working direction for the admin interface (subject to change — not a f
 All of the above is confirmed against the current admin-UI implementations — see [[UI UX Overview]].
 
 ## Status
-**Working Decision** for most items above (see `admin-ui/CLAUDE.md` "Important constraints to preserve" and `desktop-app/CLAUDE.md`, which state these as intentional, checked-with-the-user constraints already implemented in code). Evidence retention display and event-status remain flagged decisions — see [[12 - Open Questions]].
+**Working Decision** for most items above (see `admin-ui/CLAUDE.md` "Important constraints to preserve", which states these as intentional, checked-with-the-user constraints already implemented in code). Evidence retention display and event-status remain flagged decisions — see [[12 - Open Questions]].
 
 ## Related
 - [[UI UX Overview]]

@@ -1,37 +1,76 @@
 # admin-ui — BantayAralan Admin Interface Prototype
 
 Status: **Implemented** (as a UI/UX prototype with mock data — not connected
-to any real detection pipeline). See root [`CLAUDE.md`](../CLAUDE.md) for the
-project-wide working-draft/status-label rules; this file assumes you've read
-those.
+to any real detection pipeline). This is the **sole and primary** BantayAralan
+admin UI — a separate native desktop prototype (`desktop-app/`, PySide6)
+existed briefly and was removed on 2026-09-23 once the finalized prototype
+paper settled the direction as web-only; see
+[Knowledge/11 - Decisions/Web Application as Sole Admin UI.md](<../Knowledge/11 - Decisions/Web Application as Sole Admin UI.md>).
+See root [`CLAUDE.md`](../CLAUDE.md) for the project-wide working-draft/
+status-label rules; this file assumes you've read those.
 
 ## Purpose
 
 A working, click-through admin interface for BantayAralan: Dashboard,
-Events & Logs, and Event Detail (video + screenshot evidence tabs). Built to
+Events & Logs, Event Detail (video + screenshot evidence tabs), Head Count,
+and Insights & Statistics (Statistics / Classroom Insights / Suggestions
+tabs), plus a Detection Enable/Disable control in the sidebar. Built to
 demonstrate the intended UI/UX for the thesis project after the original
 Figma-based design pass was cut short by a Figma Starter-plan MCP rate
 limit. One classroom, admin-only, no login flow, no student identification
 anywhere — per the design brief this was built from.
 
+## Newer sections (added for the finalized prototype paper direction)
+
+- **Head Count** (`frontend/js/views/headcount.js`, `/api/headcounts`,
+  `head_counts` table) — **aggregate** student counts at the beginning and
+  near the end of a class session only. Never add per-student rows, names,
+  or IDs here. Recording is a real manual-entry form (there's no camera
+  pipeline to auto-populate it yet); duplicate handling is a placeholder
+  policy (last recorded value per date+point wins) — see
+  [Knowledge/12 - Open Questions.md](<../Knowledge/12 - Open Questions.md>).
+- **Detection Enable/Disable** (`renderStatusBox()` in `app.js`,
+  `/api/detection-state`, `detection_state` table) — a real, persisted
+  toggle that gates **event generation only**. The UI must never imply that
+  disabling it stops cameras, stops the app, deletes data, or stops head
+  counting — `/api/status` reports `camera_connected` and
+  `monitoring_active` as separate, always-true fields specifically so the
+  sidebar can show those as unaffected.
+- **Insights & Statistics** (`frontend/js/views/insights.js`,
+  `/api/statistics`, `/api/insights`, `/api/suggestions`) — one page, three
+  tabs, computed for real from the `events` table (plain SQL counts/percent
+  deltas over a 7-day window, not fabricated numbers). Insights/suggestions
+  use a deliberately simple, rule-based `SUGGESTION_MAP`/threshold approach
+  in `backend/app.py` — not a validated statistical or behavioral model. Say
+  so in the UI (see the `disclaimerHtml()` notes already in `insights.js`)
+  and don't strengthen that language without checking with the user first;
+  the real methodology is an explicitly open question
+  (`Knowledge/12 - Open Questions.md`).
+
 ## Architecture
 
 - **Backend**: `backend/app.py` — a small Flask app. `create_app()` wires
   routes and calls `init_db()` + `seed()` on startup (idempotent — `seed()`
-  no-ops if the DB already has rows).
-- **DB**: `backend/db.py` — plain `sqlite3`, one `events` table (see that
-  file for the exact schema rather than duplicating it here). Lives at
-  `data/bantayaralan.db`, created on first run.
+  no-ops if the DB already has rows). Routes: `/api/summary`, `/api/status`,
+  `/api/events`, `/api/events/<id>`, `/api/events/<id>/snapshot.svg`,
+  `/api/detection-state` (GET/POST), `/api/headcounts` (GET/POST),
+  `/api/statistics`, `/api/insights`, `/api/suggestions`.
+- **DB**: `backend/db.py` — plain `sqlite3`, three tables: `events`,
+  `head_counts`, `detection_state` (see that file for the exact schema
+  rather than duplicating it here). Lives at `data/bantayaralan.db`, created
+  on first run.
 - **Mock data**: `backend/seed.py` — deterministic-ish random generator
   (fixed seed) producing ~42 synthetic events spread across the last 7 days,
   all 4 categories, with a realistic mix of evidence availability (see
-  `EVIDENCE_WEIGHTS`). No student-identifying content anywhere.
+  `EVIDENCE_WEIGHTS`), plus ~10 synthetic head-count sessions
+  (`seed_headcounts()`). No student-identifying content anywhere.
 - **Frontend**: `frontend/` — plain HTML/CSS/JS, no build step, no
   framework. Hash-based routing (`#/dashboard`, `#/events`,
-  `#/events/<id>`) driven by `frontend/js/app.js`. Views in
-  `frontend/js/views/*.js` fetch JSON from the Flask API (`frontend/js/api.js`)
-  and render via template strings; shared render helpers (badges, evidence
-  tags, cards, rows, states) live in `frontend/js/components.js`.
+  `#/events/<id>`, `#/headcount`, `#/insights`) driven by `frontend/js/app.js`.
+  Views in `frontend/js/views/*.js` fetch JSON from the Flask API
+  (`frontend/js/api.js`) and render via template strings; shared render
+  helpers (badges, evidence tags, cards, rows, states) live in
+  `frontend/js/components.js`.
 - **Two run modes, one codebase**: `run_web.py` (plain browser tab) and
   `run_desktop.py` (native window via optional `pywebview` dependency) both
   serve the exact same Flask app + frontend — this is how "desktop app +
@@ -60,7 +99,11 @@ spacing.
   imply an expiry that hasn't been decided.
 - **No student names/IDs/facial recognition** anywhere — mock data, seed
   script, and placeholder SVGs are all written to stay clear of this; keep
-  new mock content the same way.
+  new mock content the same way. Head Count is aggregate-only for the same
+  reason — never add per-student rows.
+- **Avoid real-time-alert framing** — copy should read as continuous
+  monitoring reviewed periodically (events/reports), not instant alerts or
+  live notifications. See `insights.js`'s page subtitle for the pattern.
 - **Video evidence is simulated, not real** — `renderVideoTab` in
   `frontend/js/views/eventDetail.js` fakes playback with a JS timer, not an
   actual `<video>` element or file. See `README.md` → "Video evidence —

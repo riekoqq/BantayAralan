@@ -1,9 +1,13 @@
 # Desktop App as Primary Admin UI Prototype
 
 ## Status
-Working Decision
+**Reversed 2026-09-23** — see [[Web Application as Sole Admin UI]] for the
+current decision. The finalized prototype paper settled the project's
+open web-vs-desktop question in favor of a web application; `desktop-app/`
+was removed from the repository. This record is kept for its reasoning
+history, not as current guidance.
 
-## Decision
+## Decision (as originally made — no longer current)
 `desktop-app/` (PySide6 native app) is the primary admin-UI prototype going forward. `admin-ui/` (Flask + vanilla JS) remains in the repository as a reference/alternative, not deleted, not actively developed as primary.
 
 ## Reason
@@ -23,3 +27,4 @@ Not documented — would presumably follow further direction from the user/advis
 - [[Two Admin UI Prototypes]]
 - [[Desktop App (Native Prototype)]]
 - [[Admin UI GUI Framework — PySide6 for the Prototype]]
+- [[Web Application as Sole Admin UI]]

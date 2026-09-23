@@ -1,10 +1,19 @@
 # Admin UI GUI Framework — PySide6 for the Prototype
 
 ## Status
-Working Decision (scoped to the admin-UI prototype only — does not resolve a separate open question)
+Superseded 2026-09-23 (scoped to the admin-UI prototype only — never
+resolved the separate CV-pipeline question below, which is still open)
 
-## Decision
-The native admin-UI prototype (`desktop-app/`) is built with PySide6 (Qt for Python).
+## Update (2026-09-23)
+`desktop-app/` (the only place PySide6 was used in this repo) was removed
+once the project settled on a web-only admin UI — see
+[[Web Application as Sole Admin UI]]. PySide6 is no longer used anywhere in
+the repository. This record is kept for its reasoning history. The
+separate, still-open question below (the eventual CV-pipeline system's GUI
+framework) is unaffected by this and remains unresolved.
+
+## Decision (historical — no longer applicable, PySide6 usage removed)
+The native admin-UI prototype (`desktop-app/`, since removed) was built with PySide6 (Qt for Python).
 
 ## Reason
 Not explicitly stated in the repo beyond enabling "a genuine native desktop GUI... no browser, no HTTP server, and no webview involved" — PySide6 is a mainstream, capable choice for exactly that. No comparison against other native-GUI options is documented.

@@ -12,7 +12,7 @@ Requirement-level summary; full discussion and constraint list lives in [[10 - P
 - Captured evidence must not identify individual students beyond what a teacher needs to review the event.
 - The system supports, never replaces, teacher decision-making authority.
 
-Both current admin-UI prototypes satisfy this at the mock-data level (no names/IDs/facial data anywhere in seed scripts or generated placeholder imagery) — see `admin-ui/README.md` "Privacy" and `desktop-app/README.md` "Privacy".
+`admin-ui/` (the sole admin UI) satisfies this at the mock-data level (no names/IDs/facial data anywhere in seed scripts, head-count records, or generated placeholder imagery) — see `admin-ui/README.md` "Privacy".
 
 ## Status
 **Proposal Requirement**, currently honored in the two UI prototypes by construction (nothing identity-linked exists to violate this).

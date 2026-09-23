@@ -7,17 +7,17 @@ tags: [events, evidence]
 Each event can (in the data model) have a screenshot and/or a video as evidence. Today, **all evidence is simulated or generated placeholder content** — no real camera imagery exists anywhere in the repository.
 
 ## Current implementation (Implemented, simulated)
-- **Snapshot evidence**: `admin-ui` serves a generated placeholder SVG per event (`/api/events/<id>/snapshot.svg`, built in `backend/app.py`'s `_placeholder_svg`); `desktop-app` draws an equivalent placeholder at runtime with `QPainter` (`app/snapshot.py`). Neither is a real camera frame.
-- **Video evidence**: fully simulated in both UIs — `admin-ui`'s `renderVideoTab` (`frontend/js/views/eventDetail.js`) fakes playback with a JS timer; `desktop-app`'s `app/video_player.py` does the same with a `QTimer`, though its fullscreen toggle is genuinely real OS behavior. No actual video file or codec is involved in either.
+- **Snapshot evidence**: `admin-ui` serves a generated placeholder SVG per event (`/api/events/<id>/snapshot.svg`, built in `backend/app.py`'s `_placeholder_svg`) — not a real camera frame. (A removed `desktop-app/` prototype drew an equivalent placeholder with `QPainter` — see [[Web Application as Sole Admin UI]].)
+- **Video evidence**: fully simulated — `admin-ui`'s `renderVideoTab` (`frontend/js/views/eventDetail.js`) fakes playback with a JS timer. No actual video file or codec is involved.
 - **Evidence availability mix**: seeded with `EVIDENCE_WEIGHTS` (~68% both, ~16% snapshot only, ~6% video only, ~10% unavailable) to exercise the "Evidence Unavailable" UI state realistically.
 
 ## What real evidence capture would require (documented, not built)
-Per both subsystem READMEs' "Video evidence — backend requirements" sections:
+Per `admin-ui/README.md`'s "Video evidence — backend requirements" section:
 1. A rolling per-camera frame buffer, so a clip can include time *before* the triggering event.
 2. Cutting a clip spanning a defined window around the trigger (e.g. -10s/+10s).
 3. Encoding and storing the clip, with a retention/storage strategy — **unresolved**, see [[12 - Open Questions]].
 4. Associating the clip with the event row (e.g. a `video_path` column next to `snapshot_available`).
-5. Serving it so a real `<video>` element (web) or Qt Multimedia (`QMediaPlayer`/`QVideoWidget`, desktop) can seek/scrub it. Both UIs are structured so this swap is a contained change (`renderVideoTab`, `video_player.py`).
+5. Serving it so a real `<video>` element can seek/scrub it — `admin-ui` is structured so this swap is a contained change (`renderVideoTab`).
 
 ## Working direction (per current project guidance — not finalized)
 - Video evidence is planned/desired.

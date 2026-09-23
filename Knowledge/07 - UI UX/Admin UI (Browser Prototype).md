@@ -5,10 +5,13 @@ status: Implemented
 
 # Admin UI (Browser Prototype)
 
-`admin-ui/` — the earlier of the two working admin-UI prototypes. Full detail: [admin-ui/CLAUDE.md](../../admin-ui/CLAUDE.md), [admin-ui/README.md](../../admin-ui/README.md).
+`admin-ui/` — the **sole and primary** BantayAralan admin UI. Full detail: [admin-ui/CLAUDE.md](../../admin-ui/CLAUDE.md), [admin-ui/README.md](../../admin-ui/README.md).
 
 ## Stack
-Flask backend (`backend/app.py`) serving a small JSON API + static frontend; plain HTML/CSS/JS frontend (`frontend/`) with hash-based routing (`#/dashboard`, `#/events`, `#/events/<id>`), no build step, no framework.
+Flask backend (`backend/app.py`) serving a small JSON API + static frontend; plain HTML/CSS/JS frontend (`frontend/`) with hash-based routing (`#/dashboard`, `#/events`, `#/events/<id>`, `#/headcount`, `#/insights`), no build step, no framework.
+
+## Screens
+Dashboard, Events & Logs, Event Detail, Head Count (aggregate start/end-of-class counts), and Insights & Statistics (Statistics / Classroom Insights / Suggestions tabs), plus a Detection Enable/Disable control in the sidebar. See [admin-ui/CLAUDE.md](../../admin-ui/CLAUDE.md) for the routes/tables behind each.
 
 ## Two run modes, one codebase
 - `run_web.py` — plain browser tab, `http://127.0.0.1:5057`.
@@ -20,9 +23,13 @@ Both serve the exact same Flask app + frontend, which is how "web app + desktop 
 CSS custom properties in `frontend/css/tokens.css` (`--cat-*-fg/bg` per category, `--space-*`, `--radius-*`, semantic `--bg-*`/`--text-*`) — carried over from an earlier, abandoned Figma design pass (cut short by a Figma Starter-plan MCP rate limit).
 
 ## Status
-**Implemented** as a UI/UX prototype with mock data. Kept as a reference/alternative — superseded as primary prototype by [[Desktop App (Native Prototype)]]. See [[Two Admin UI Prototypes]].
+**Implemented** as a UI/UX prototype with mock data — **sole and primary
+admin UI**. A separate native prototype ([[Desktop App (Native Prototype)]])
+was primary for a period and was removed 2026-09-23; see
+[[Two Admin UI Prototypes]] (historical) and
+[[Web Application as Sole Admin UI]].
 
 ## Related
-- [[Desktop App (Native Prototype)]]
+- [[Desktop App (Native Prototype)]] (historical)
 - [[06 - Database]]
 - [[Evidence System]]

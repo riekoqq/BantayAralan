@@ -24,13 +24,21 @@ restate the knowledge base.
   Requirements, design, and technical decisions may change after adviser
   consultation. Never treat a proposal statement as final, or as evidence
   that it's implemented.
-- Only two subsystems have actual source code: [`admin-ui/`](admin-ui/)
-  (Flask + vanilla JS web/webview admin UI, mock data) and
-  [`desktop-app/`](desktop-app/) (PySide6 native admin UI, mock data,
-  current primary prototype). Neither has a camera, a model, or a connection
-  to any detection backend — each consumes mock SQLite data it generates
-  itself. See their own `CLAUDE.md` files and
-  [Knowledge/03 - Architecture/Two Admin UI Prototypes.md](<Knowledge/03 - Architecture/Two Admin UI Prototypes.md>).
+- Only one subsystem has actual source code: [`admin-ui/`](admin-ui/) (Flask
+  + vanilla JS web app, mock data) — the sole and primary BantayAralan admin
+  UI. It has no camera, no model, and no connection to any detection
+  backend — it consumes mock SQLite data it generates itself. See its own
+  `CLAUDE.md`.
+  A separate native desktop prototype (`desktop-app/`, PySide6) previously
+  existed and was briefly the documented "primary" UI; it was **removed on
+  2026-09-23** once the finalized prototype paper settled the direction as
+  web-only (nothing in it was reusable — see
+  [Knowledge/11 - Decisions/Web Application as Sole Admin UI.md](<Knowledge/11 - Decisions/Web Application as Sole Admin UI.md>)).
+  It's documented only as history now — see
+  [Knowledge/03 - Architecture/Two Admin UI Prototypes.md](<Knowledge/03 - Architecture/Two Admin UI Prototypes.md>)
+  and [Knowledge/07 - UI UX/Desktop App (Native Prototype).md](<Knowledge/07 - UI UX/Desktop App (Native Prototype).md>)
+  (both marked historical). Don't write code against a `desktop-app/` path —
+  it no longer exists in the working tree.
 - [`anti-ai-slop/`](anti-ai-slop/) is a separate third-party tool (its own
   git repo), not BantayAralan code — never edit it as part of this project.
 - The CV pipeline (YOLO11m, ByteTrack, camera capture) described in the
@@ -47,11 +55,11 @@ Knowledge/
 ├── 00 - Project Overview.md          entry point — start here
 ├── 01 - Research/                    proposal, research questions, methodology, standards
 ├── 02 - Requirements/                functional / non-functional / privacy / UI requirements
-├── 03 - Architecture/                system architecture, the two admin-UI prototypes
+├── 03 - Architecture/                system architecture (admin-ui; historical: two admin-UI prototypes)
 ├── 04 - Computer Vision.md           proposed CV pipeline (not implemented)
 ├── 05 - Events & Evidence/           event model, evidence system
-├── 06 - Database.md                  SQLite schema, both implementations
-├── 07 - UI UX/                       UI direction, admin-ui, desktop-app
+├── 06 - Database.md                  SQLite schema
+├── 07 - UI UX/                       UI direction, admin-ui (historical: desktop-app)
 ├── 08 - Hardware.md                  cameras, processing PC
 ├── 09 - Testing & Evaluation.md      proposal metrics vs. actual testing done
 ├── 10 - Privacy & Ethics.md          privacy-first constraints
@@ -84,26 +92,19 @@ Knowledge/
    that don't exist in this repo. Don't copy large chunks of the proposal or
    of source code into context files — summarize and point at the real file.
 6. When a real subsystem is added (detection/, tracking/, etc.), give it its
-   own scoped `CLAUDE.md` (see `admin-ui/CLAUDE.md` / `desktop-app/CLAUDE.md`
-   as examples) and add matching notes under `Knowledge/`.
+   own scoped `CLAUDE.md` (see `admin-ui/CLAUDE.md` as an example) and add
+   matching notes under `Knowledge/`.
 
 ## Commands
 
-Native desktop admin UI (primary prototype — see [desktop-app/CLAUDE.md](desktop-app/CLAUDE.md)):
-
-```bash
-cd desktop-app
-pip install -r requirements.txt
-python run.py            # opens a native window directly, no browser
-```
-
-Browser-based admin UI (earlier prototype, kept as reference — see [admin-ui/CLAUDE.md](admin-ui/CLAUDE.md)):
+The web app (sole admin UI — see [admin-ui/CLAUDE.md](admin-ui/CLAUDE.md)),
+in either of its two run modes (same Flask app + frontend either way):
 
 ```bash
 cd admin-ui
 pip install -r requirements.txt
-python run_web.py       # web app mode, http://127.0.0.1:5057
-python run_desktop.py   # webview window mode, needs `pip install pywebview`
+python run_web.py       # browser tab, http://127.0.0.1:5057
+python run_desktop.py   # the same web app in a native window, needs `pip install pywebview`
 ```
 
 There is no build/run/test tooling for the CV detection pipeline (YOLO/ByteTrack/

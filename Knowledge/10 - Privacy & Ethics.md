@@ -15,7 +15,7 @@ Consolidates the proposal's ethical framing with the enforceable rule already in
 - Objective 5 of the proposal ("ethical data protocols") and research question 5 both make privacy a first-class research goal, not an afterthought — see [[Research Questions & Objectives]].
 
 ## Current implementation practice
-Both admin-UI prototypes honor this by construction: mock data, seed scripts, and generated placeholder imagery contain no student names, IDs, or identifying content anywhere (`admin-ui/README.md` and `desktop-app/README.md`, "Privacy" sections). There is no facial-recognition or identity-tracking code anywhere in the repository to remove or restrict — the constraint is currently satisfied trivially because no real capture pipeline exists yet.
+`admin-ui/` (the sole admin UI) honors this by construction: mock data, seed scripts, and generated placeholder imagery contain no student names, IDs, or identifying content anywhere (`admin-ui/README.md`, "Privacy" section) — same for the aggregate-only Head Count feature. There is no facial-recognition or identity-tracking code anywhere in the repository to remove or restrict — the constraint is currently satisfied trivially because no real capture pipeline exists yet.
 
 ## What this means for future work
 If/when a real detection pipeline is added, this constraint must be preserved even though it would be "technically straightforward" to add identity tracking on top of pose estimation/tracking. Any request that would require facial recognition, identity tracking, or behavioral profiling should be flagged back to the project owners rather than implemented silently — this is stated explicitly in `.claude/rules/privacy-and-ethics.md`.

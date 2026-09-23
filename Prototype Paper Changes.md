@@ -30,14 +30,20 @@ consideration / Changed from proposal / Not yet implemented / Unclear / Deprecat
 
 ## Open issues requiring project-team / thesis-adviser input
 
-1. **Web application vs. desktop-primary direction.** The prototype paper presents
+1. **Web application vs. desktop-primary direction.** ~~The prototype paper presents
    BantayAralan as a web application (grounded in the existing `admin-ui/` Flask
    prototype). This directly conflicts with
    [`Knowledge/11 - Decisions/Desktop App as Primary Admin UI Prototype.md`](<Knowledge/11 - Decisions/Desktop App as Primary Admin UI Prototype.md>),
    which documents `desktop-app/` (PySide6) as the *current primary* admin UI
    prototype specifically because a native, non-web application was wanted. This
    paper does not resolve that conflict — it is an open project decision for the
-   team to settle.
+   team to settle.~~
+   **Resolved 2026-09-23**: the project team settled this in favor of the web
+   application. `desktop-app/` was removed from the repository; `admin-ui/` is
+   now the sole and primary admin UI, and `admin-ui/` was extended to cover
+   the paper's remaining IA (Head Count, Detection Enable/Disable,
+   Statistics/Classroom Insights/Suggestions). See
+   [`Knowledge/11 - Decisions/Web Application as Sole Admin UI.md`](<Knowledge/11 - Decisions/Web Application as Sole Admin UI.md>).
 2. **Head-count duplicate-counting / individual-distinction mechanism.** No
    technique is specified for avoiding double-counting or distinguishing students
    within a camera frame while keeping the count aggregate-only. Open technical

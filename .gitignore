@@ -4,3 +4,4 @@ __pycache__/
 .DS_Store
 
 anti-ai-slop/
+.claude/scheduled_tasks.lock

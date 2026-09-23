@@ -41,7 +41,7 @@ function renderRecent(container, events) {
   if (!events || events.length === 0) {
     container.innerHTML = emptyStateHtml({
       title: "No events detected yet",
-      desc: "Detected classroom events will appear here as they happen.",
+      desc: "Detected classroom events will appear here once they're recorded.",
     });
     return;
   }

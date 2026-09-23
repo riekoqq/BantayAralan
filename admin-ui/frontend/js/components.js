@@ -84,6 +84,10 @@ function errorStateHtml({ title = "Something went wrong", desc = "Please try aga
     </div>`;
 }
 
+function disclaimerHtml(text) {
+  return `<p class="disclaimer-note">${text}</p>`;
+}
+
 function attachEventCardNavigation(root) {
   root.querySelectorAll("[data-event-id]").forEach((el) => {
     const go = () => { window.location.hash = `#/events/${el.dataset.eventId}`; };

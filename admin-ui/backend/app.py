@@ -67,12 +67,103 @@ def create_app():
             last = conn.execute(
                 "SELECT occurred_at FROM events ORDER BY occurred_at DESC LIMIT 1"
             ).fetchone()
+            detection_row = conn.execute(
+                "SELECT enabled FROM detection_state WHERE id = 1"
+            ).fetchone()
+        # camera_connected/monitoring_active are mock-true -- there is no real
+        # camera or pipeline yet. Cameras and continuous monitoring/processing
+        # are independent of the detection_enabled toggle, which only gates
+        # event generation -- see admin-ui/CLAUDE.md.
         return jsonify({
             "camera_connected": True,
-            "detection_running": True,
+            "monitoring_active": True,
+            "detection_enabled": bool(detection_row["enabled"]) if detection_row else True,
             "database_ok": True,
             "last_event_at": last["occurred_at"] if last else None,
         })
+
+    @app.get("/api/detection-state")
+    def get_detection_state():
+        with connection() as conn:
+            row = conn.execute("SELECT enabled, updated_at FROM detection_state WHERE id = 1").fetchone()
+        return jsonify({"enabled": bool(row["enabled"]), "updated_at": row["updated_at"]})
+
+    @app.post("/api/detection-state")
+    def set_detection_state():
+        data = request.get_json(silent=True) or {}
+        enabled = data.get("enabled")
+        if not isinstance(enabled, bool):
+            return jsonify({"error": "invalid_input", "message": "enabled must be a boolean."}), 400
+        now = datetime.now().isoformat(timespec="seconds")
+        with connection() as conn:
+            conn.execute(
+                "UPDATE detection_state SET enabled = ?, updated_at = ? WHERE id = 1",
+                (1 if enabled else 0, now),
+            )
+        return jsonify({"enabled": enabled, "updated_at": now})
+
+    # ------------------------------------------------------------ head count
+    @app.get("/api/headcounts")
+    def list_headcounts():
+        limit = min(int(request.args.get("limit", 20)), 100)
+        with connection() as conn:
+            rows = conn.execute(
+                "SELECT class_date, point, count, recorded_at FROM head_counts "
+                "ORDER BY class_date DESC, point ASC"
+            ).fetchall()
+        sessions = {}
+        for r in rows:
+            session = sessions.setdefault(r["class_date"], {"class_date": r["class_date"], "start": None, "end": None})
+            session[r["point"]] = {"count": r["count"], "recorded_at": r["recorded_at"]}
+        sessions_list = sorted(sessions.values(), key=lambda s: s["class_date"], reverse=True)[:limit]
+        return jsonify({"sessions": sessions_list})
+
+    @app.post("/api/headcounts")
+    def record_headcount():
+        data = request.get_json(silent=True) or {}
+        point = data.get("point")
+        count = data.get("count")
+        class_date = data.get("class_date") or datetime.now().date().isoformat()
+        if point not in ("start", "end") or not isinstance(count, int) or isinstance(count, bool) or count < 0:
+            return jsonify({
+                "error": "invalid_input",
+                "message": "point must be 'start' or 'end' and count must be a non-negative integer.",
+            }), 400
+        now = datetime.now().isoformat(timespec="seconds")
+        with connection() as conn:
+            # Placeholder duplicate-count policy: last recorded value for this
+            # (date, point) wins. See Knowledge/12 - Open Questions.md.
+            conn.execute("DELETE FROM head_counts WHERE class_date = ? AND point = ?", (class_date, point))
+            conn.execute(
+                "INSERT INTO head_counts (class_date, point, count, recorded_at) VALUES (?, ?, ?, ?)",
+                (class_date, point, count, now),
+            )
+        return jsonify({"class_date": class_date, "point": point, "count": count, "recorded_at": now}), 201
+
+    # -------------------------------------------------- statistics/insights
+    @app.get("/api/statistics")
+    def statistics_route():
+        return jsonify(_compute_statistics())
+
+    @app.get("/api/insights")
+    def insights_route():
+        stats = _compute_statistics()
+        return jsonify({"insights": _compute_insights(stats), "window_days": stats["window_days"]})
+
+    @app.get("/api/suggestions")
+    def suggestions_route():
+        stats = _compute_statistics()
+        items = [
+            {
+                "category": cat,
+                "category_label": CATEGORY_LABELS[cat],
+                "count": n,
+                "suggestion": SUGGESTION_MAP[cat],
+            }
+            for cat, n in stats["by_category_this_period"].items() if n > 0
+        ]
+        items.sort(key=lambda s: s["count"], reverse=True)
+        return jsonify({"suggestions": items, "window_days": stats["window_days"]})
 
     @app.get("/api/events")
     def list_events():
@@ -167,6 +258,80 @@ def _serialize_event(row, detail: bool = False):
     if detail:
         data["snapshot_url"] = f"/api/events/{row['id']}/snapshot.svg" if row["snapshot_available"] else None
     return data
+
+
+# Simple, clearly-labeled rule-based text -- not a validated recommendation
+# engine. See Knowledge/12 - Open Questions.md ("Statistical/pattern-analysis
+# methodology" is explicitly open).
+SUGGESTION_MAP = {
+    "standing": "Consider a brief mid-class movement break if standing events cluster around the same time of day.",
+    "trash": "Consider a quick tidy-up reminder before transitions if trash/scattered-object events recur.",
+    "misaligned": "Consider a seat-realignment check at the start of class if misaligned-seat events recur.",
+    "other": "Review flagged events individually -- this category covers activity that doesn't fit the other three.",
+}
+
+
+def _compute_statistics(window_days: int = 7) -> dict:
+    """Real counts/percentages computed from the (seeded, mock) events table.
+
+    Simple SQL aggregation only -- no invented formula or fabricated numbers.
+    """
+    now = datetime.now()
+    period_start = now - timedelta(days=window_days)
+    prev_start = now - timedelta(days=window_days * 2)
+    with connection() as conn:
+        total_all_time = conn.execute("SELECT COUNT(*) AS n FROM events").fetchone()["n"]
+        this_period = conn.execute(
+            "SELECT COUNT(*) AS n FROM events WHERE occurred_at >= ?", (period_start.isoformat(),)
+        ).fetchone()["n"]
+        previous_period = conn.execute(
+            "SELECT COUNT(*) AS n FROM events WHERE occurred_at >= ? AND occurred_at < ?",
+            (prev_start.isoformat(), period_start.isoformat()),
+        ).fetchone()["n"]
+        by_category_this_period = {
+            cat: conn.execute(
+                "SELECT COUNT(*) AS n FROM events WHERE category = ? AND occurred_at >= ?",
+                (cat, period_start.isoformat()),
+            ).fetchone()["n"]
+            for cat in CATEGORY_LABELS
+        }
+
+    trend_pct = None
+    if previous_period:
+        trend_pct = round((this_period - previous_period) / previous_period * 100)
+
+    return {
+        "window_days": window_days,
+        "total_events_all_time": total_all_time,
+        "events_this_period": this_period,
+        "events_previous_period": previous_period,
+        "trend_pct": trend_pct,
+        "by_category_this_period": by_category_this_period,
+    }
+
+
+def _compute_insights(stats: dict) -> list:
+    """0-2 short, plainly-derived observations -- empty if there isn't enough data yet."""
+    insights = []
+    if stats["events_this_period"] == 0:
+        return insights
+
+    top_cat, top_n = max(stats["by_category_this_period"].items(), key=lambda kv: kv[1])
+    if top_n > 0:
+        plural = "" if top_n == 1 else "s"
+        insights.append(
+            f"{CATEGORY_LABELS[top_cat]} was the most frequent recorded category in the last "
+            f"{stats['window_days']} days ({top_n} event{plural})."
+        )
+
+    trend = stats["trend_pct"]
+    if trend is not None and abs(trend) >= 20:
+        direction = "increased" if trend > 0 else "decreased"
+        insights.append(
+            f"Recorded events {direction} {abs(trend)}% compared to the previous {stats['window_days']} days."
+        )
+
+    return insights
 
 
 def _placeholder_svg(color: str, category: str) -> str:

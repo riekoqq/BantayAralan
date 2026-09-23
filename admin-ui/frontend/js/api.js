@@ -23,4 +23,47 @@ const Api = {
     }
     return r.json();
   },
+  async headcounts() {
+    const r = await fetch("/api/headcounts");
+    if (!r.ok) throw new Error("headcounts_failed");
+    return r.json();
+  },
+  async recordHeadcount(point, count, classDate) {
+    const r = await fetch("/api/headcounts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ point, count, ...(classDate ? { class_date: classDate } : {}) }),
+    });
+    if (!r.ok) throw new Error("record_headcount_failed");
+    return r.json();
+  },
+  async detectionState() {
+    const r = await fetch("/api/detection-state");
+    if (!r.ok) throw new Error("detection_state_failed");
+    return r.json();
+  },
+  async setDetectionState(enabled) {
+    const r = await fetch("/api/detection-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled }),
+    });
+    if (!r.ok) throw new Error("set_detection_state_failed");
+    return r.json();
+  },
+  async statistics() {
+    const r = await fetch("/api/statistics");
+    if (!r.ok) throw new Error("statistics_failed");
+    return r.json();
+  },
+  async insights() {
+    const r = await fetch("/api/insights");
+    if (!r.ok) throw new Error("insights_failed");
+    return r.json();
+  },
+  async suggestions() {
+    const r = await fetch("/api/suggestions");
+    if (!r.ok) throw new Error("suggestions_failed");
+    return r.json();
+  },
 };

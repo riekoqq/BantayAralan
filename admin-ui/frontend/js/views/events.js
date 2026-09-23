@@ -97,7 +97,7 @@ function renderList(body, data, state) {
     const filtered = state.category !== "all" || state.range !== "all" || state.q;
     body.innerHTML = filtered
       ? emptyStateHtml({ icon: "search", title: "No events match your filters", desc: "Try a different category, date range, or search term." })
-      : emptyStateHtml({ title: "No events detected for this period", desc: "Detected classroom events will appear here as they happen." });
+      : emptyStateHtml({ title: "No events detected for this period", desc: "Detected classroom events will appear here once they're recorded." });
     return;
   }
 

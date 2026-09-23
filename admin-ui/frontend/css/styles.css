@@ -71,6 +71,23 @@ img, svg { display: block; }
 .status-line { display: flex; align-items: center; gap: var(--space-xs); font-size: 11.5px; color: var(--text-secondary); }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--status-success); flex-shrink: 0; }
 .status-dot.warn { background: var(--status-warning); }
+.status-note { font-size: 10.5px; color: var(--text-tertiary); margin: var(--space-xs) 0 0; }
+
+/* ---------- detection toggle ---------- */
+.detection-toggle-line { gap: var(--space-sm); }
+.toggle-switch {
+  position: relative; width: 32px; height: 18px; flex-shrink: 0;
+  border-radius: var(--radius-full); border: none;
+  background: var(--gray-300); padding: 0;
+}
+.toggle-switch.on { background: var(--brand-primary); }
+.toggle-switch:disabled { opacity: .6; cursor: not-allowed; }
+.toggle-thumb {
+  position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--white);
+  transition: transform .15s ease;
+}
+.toggle-switch.on .toggle-thumb { transform: translateX(14px); }
 
 .main {
   flex: 1;
@@ -272,6 +289,41 @@ img, svg { display: block; }
 .screenshot-viewer img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: var(--bg-surface-alt); }
 .screenshot-caption { padding: var(--space-md); font-size: 12.5px; color: var(--text-secondary); background: var(--bg-surface); }
 
+/* ---------- head count ---------- */
+.headcount-form {
+  display: flex; flex-wrap: wrap; gap: var(--space-xl);
+  background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+  padding: var(--space-lg); box-shadow: var(--shadow-card);
+  margin-bottom: var(--space-md);
+}
+.headcount-field { display: flex; flex-direction: column; gap: var(--space-xs); flex: 1 1 220px; }
+.headcount-field label { font-size: 12.5px; font-weight: 500; color: var(--text-secondary); }
+.headcount-input-row { display: flex; gap: var(--space-sm); }
+.headcount-input-row input {
+  width: 100%; padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-default); border-radius: var(--radius-md);
+  font-size: 14px; color: var(--text-primary);
+}
+.form-error { color: var(--status-danger); font-size: 12.5px; margin: 0 0 var(--space-md); }
+.headcount-row .col-date { width: auto; font-weight: 600; color: var(--text-primary); }
+
+/* ---------- insights / suggestions ---------- */
+.disclaimer-note { font-size: 12px; color: var(--text-tertiary); margin: 0 0 var(--space-lg); }
+.insight-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-sm); }
+.insight-item {
+  display: flex; align-items: flex-start; gap: var(--space-sm);
+  background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md);
+  padding: var(--space-md); font-size: 13.5px; box-shadow: var(--shadow-card);
+}
+.suggestion-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-lg); }
+.suggestion-card {
+  background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card); padding: var(--space-lg);
+  display: flex; flex-direction: column; gap: var(--space-sm);
+}
+.suggestion-text { font-size: 13.5px; color: var(--text-primary); margin: 0; }
+.suggestion-count { font-size: 12px; color: var(--text-tertiary); margin: 0; }
+
 /* ---------- states ---------- */
 .state-panel {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-sm);
@@ -301,7 +353,7 @@ img, svg { display: block; }
     position: sticky; top: 0; z-index: 5;
   }
   .mobile-topbar .wordmark span { font-size: 15px; }
-  .mobile-nav { display: flex; gap: var(--space-sm); }
+  .mobile-nav { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
   .mobile-nav a { font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 6px 10px; border-radius: var(--radius-sm); }
   .mobile-nav a.active { background: var(--brand-primary); color: #fff; }
   .main { padding: var(--space-lg); max-width: 100%; }

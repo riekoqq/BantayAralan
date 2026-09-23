@@ -16,6 +16,9 @@ const Icons = {
   fullscreen: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   alertCircle: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="${c}" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`,
   inbox: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12h4l2 3h4l2-3h4" stroke="${c}" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 6h13l1.5 6v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7l1.5-6Z" stroke="${c}" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  users: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3" stroke="${c}" stroke-width="2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="${c}" stroke-width="2" stroke-linecap="round"/><path d="M16 6.5a3 3 0 0 1 0 5.9M20 20c0-2.8-2-5.1-4.6-5.8" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`,
+  barChart: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 20V10M11 20V4M18 20v-7" stroke="${c}" stroke-width="2" stroke-linecap="round"/><path d="M2 20h20" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`,
+  lightbulb: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18h6M10 21h4" stroke="${c}" stroke-width="2" stroke-linecap="round"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.45 1 1.15 1 1.9V16h5v-.2c0-.75.4-1.45 1-1.9A6 6 0 0 0 12 3Z" stroke="${c}" stroke-width="2" stroke-linejoin="round"/></svg>`,
 };
 
 function iconHtml(name, color, size = 16) {

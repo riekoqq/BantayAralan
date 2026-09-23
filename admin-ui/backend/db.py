@@ -5,6 +5,7 @@ or detection pipeline -- see ../CLAUDE.md and the project root CLAUDE.md for
 what is and is not implemented.
 """
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 from contextlib import contextmanager
 
@@ -21,6 +22,25 @@ CREATE TABLE IF NOT EXISTS events (
     video_available INTEGER NOT NULL DEFAULT 0,
     snapshot_available INTEGER NOT NULL DEFAULT 0,
     evidence_note TEXT                  -- shown when evidence is unavailable
+);
+
+-- Aggregate student head counts at the beginning/end of a class session.
+-- Aggregate only -- no student names, IDs, or per-student rows anywhere.
+CREATE TABLE IF NOT EXISTS head_counts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    class_date TEXT NOT NULL,           -- ISO date (YYYY-MM-DD)
+    point TEXT NOT NULL CHECK (point IN ('start', 'end')),
+    count INTEGER NOT NULL,
+    recorded_at TEXT NOT NULL           -- ISO 8601 timestamp
+);
+
+-- Single persisted row: whether detection/event-generation is enabled.
+-- Gates event generation only -- cameras, monitoring, and head counting
+-- are independent of this flag (see admin-ui/CLAUDE.md).
+CREATE TABLE IF NOT EXISTS detection_state (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    enabled INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL
 );
 """
 
@@ -53,6 +73,16 @@ def connection():
 def init_db():
     with connection() as conn:
         conn.executescript(SCHEMA)
+    ensure_detection_state()
+
+
+def ensure_detection_state():
+    """Make sure the single detection_state row exists, defaulting to enabled."""
+    with connection() as conn:
+        conn.execute(
+            "INSERT OR IGNORE INTO detection_state (id, enabled, updated_at) VALUES (1, 1, ?)",
+            (datetime.now().isoformat(timespec="seconds"),),
+        )
 
 
 def is_seeded() -> bool:

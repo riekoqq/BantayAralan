@@ -1,0 +1,223 @@
+{
+  "main": {
+    "id": "39f20fc7da8f91fe",
+    "type": "split",
+    "children": [
+      {
+        "id": "fe7574685e3df927",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fe5dec4b4a866014",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "3f4f937a49ac1f91",
+    "type": "split",
+    "children": [
+      {
+        "id": "18e810d7c81e6818",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "57cc97e9a8436374",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "c152bbef1984d601",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "b56072bcac55b460",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "f6a48508b1a0baa8",
+    "type": "split",
+    "children": [
+      {
+        "id": "a743819d7336d908",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c9635621363801ab",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "237af1bbeb351e6f",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "6e70a6e2b99cd1bf",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "e2b3230d080fe06e",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "9e1af1477a12cbaf",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "57cc97e9a8436374",
+  "lastOpenFiles": [
+    "CLAUDE.md.tmp.13332.3e4c4c052d76",
+    "CLAUDE.md.tmp.13332.024380031b2e",
+    "Knowledge/13 - Meeting Notes/README.md",
+    "Knowledge/13 - Meeting Notes/README.md.tmp.13332.116de8bc8d39",
+    "Knowledge/13 - Meeting Notes",
+    "Knowledge/12 - Open Questions.md",
+    "Knowledge/12 - Open Questions.md.tmp.13332.b08d1c460da7",
+    "Knowledge/11 - Decisions/Admin UI GUI Framework — PySide6 for the Prototype.md",
+    "Knowledge/11 - Decisions/Admin UI GUI Framework — PySide6 for the Prototype.md.tmp.13332.5801ef7ead44",
+    "Knowledge/11 - Decisions/No Event-Status Field.md",
+    "Knowledge/11 - Decisions/No Event-Status Field.md.tmp.13332.fbd2b0a1a0b8",
+    "Knowledge/11 - Decisions/Desktop App as Primary Admin UI Prototype.md",
+    "Knowledge/11 - Decisions/Desktop App as Primary Admin UI Prototype.md.tmp.13332.7cc1b704e6f4",
+    "Knowledge/11 - Decisions",
+    "Knowledge/10 - Privacy & Ethics.md",
+    "Knowledge/10 - Privacy & Ethics.md.tmp.13332.35eae0cf9508",
+    "Knowledge/09 - Testing & Evaluation.md",
+    "Knowledge/09 - Testing & Evaluation.md.tmp.13332.b99d6e0cc189",
+    "Knowledge/08 - Hardware.md",
+    "Knowledge/07 - UI UX/Desktop App (Native Prototype).md",
+    "Knowledge/07 - UI UX/Admin UI (Browser Prototype).md",
+    "Knowledge/07 - UI UX/UI UX Overview.md",
+    "Knowledge/06 - Database.md",
+    "Knowledge/05 - Events & Evidence/Evidence System.md",
+    "Knowledge/05 - Events & Evidence/Event Model.md",
+    "Knowledge/04 - Computer Vision.md",
+    "Knowledge/03 - Architecture/Two Admin UI Prototypes.md",
+    "Knowledge/03 - Architecture/System Architecture.md",
+    "Knowledge/02 - Requirements/UI Requirements.md",
+    "Knowledge/02 - Requirements/Privacy Requirements.md",
+    "Knowledge/02 - Requirements/Non-Functional Requirements.md",
+    "Knowledge/02 - Requirements/Functional Requirements.md",
+    "Knowledge/01 - Research/References.md",
+    "Knowledge/01 - Research/Evaluation Standards.md",
+    "Knowledge/01 - Research/Methodology.md",
+    "Knowledge/01 - Research/Scope and Limitations.md"
+  ]
+}

@@ -1,0 +1,72 @@
+:root {
+  /* Neutrals */
+  --gray-50: #F8F9FB;
+  --gray-100: #EEF1F5;
+  --gray-200: #E1E5EB;
+  --gray-300: #C7CDD6;
+  --gray-400: #9AA3B1;
+  --gray-500: #6B7382;
+  --gray-600: #4B525F;
+  --gray-700: #343A45;
+  --gray-800: #20242C;
+  --gray-900: #12151A;
+  --white: #FFFFFF;
+
+  /* Brand */
+  --brand-primary: #0E7C86;
+  --brand-primary-hover: #0B636B;
+
+  /* Status */
+  --status-success: #1E8E5A;
+  --status-success-bg: #E5F5ED;
+  --status-warning: #B7791F;
+  --status-warning-bg: #FBF1DE;
+  --status-danger: #C0344B;
+  --status-danger-bg: #FBE9EC;
+
+  /* Semantic */
+  --bg-page: var(--gray-50);
+  --bg-surface: var(--white);
+  --bg-surface-alt: var(--gray-100);
+  --bg-inverse: var(--gray-900);
+  --border-default: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-600);
+  --text-tertiary: var(--gray-400);
+  --text-inverse: var(--white);
+
+  /* Event categories -- always paired with an icon + text label, never color alone */
+  --cat-standing-fg: #B7791F;
+  --cat-standing-bg: #FBF1DE;
+  --cat-trash-fg: #C0344B;
+  --cat-trash-bg: #FBE9EC;
+  --cat-misaligned-fg: #6E4FA6;
+  --cat-misaligned-bg: #EFE9F7;
+  --cat-other-fg: #475266;
+  --cat-other-bg: #EAEDF3;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  /* Elevation */
+  --shadow-card: 0 1px 3px rgba(18, 21, 26, 0.08);
+  --shadow-modal: 0 12px 32px -4px rgba(13, 15, 23, 0.18);
+
+  /* Type */
+  --font-sans: "Inter", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --sidebar-width: 240px;
+}

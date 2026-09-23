@@ -1,0 +1,7 @@
+flask>=3.0
+
+# Optional, only needed to run the desktop-window launcher (run_desktop.py):
+# pywebview>=5.0
+
+# Optional, only needed to build a standalone .exe (see README "Packaging"):
+# pyinstaller>=6.0

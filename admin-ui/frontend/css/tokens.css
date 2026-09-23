@@ -70,3 +70,44 @@
 
   --sidebar-width: 240px;
 }
+
+/* ---------- dark theme ----------
+   Overrides the semantic layer only (bg, text, border, cat, and status
+   token families) -- the raw gray-scale and brand-primary neutrals above
+   stay a fixed scale. Applied via a data-theme="dark" attribute on <html>
+   (see frontend/js/theme.js); components that already use the semantic
+   tokens need no other change to support both themes. */
+:root[data-theme="dark"] {
+  --bg-page: #14171C;
+  --bg-surface: #1B1F26;
+  --bg-surface-alt: #242933;
+  --bg-inverse: #F1F3F6;
+  --border-default: #2C323D;
+  --border-strong: #3A4150;
+  --text-primary: #F1F3F6;
+  --text-secondary: #B7C0CC;
+  --text-tertiary: #838C99;
+  --text-inverse: #12151A;
+
+  --brand-primary: #17ADB9;
+  --brand-primary-hover: #45C4CE;
+
+  --status-success: #3FBE85;
+  --status-success-bg: rgba(63, 190, 133, 0.16);
+  --status-warning: #E3A83F;
+  --status-warning-bg: rgba(227, 168, 63, 0.16);
+  --status-danger: #F0708A;
+  --status-danger-bg: rgba(240, 112, 138, 0.16);
+
+  --cat-standing-fg: #E3A83F;
+  --cat-standing-bg: rgba(227, 168, 63, 0.16);
+  --cat-trash-fg: #F0708A;
+  --cat-trash-bg: rgba(240, 112, 138, 0.16);
+  --cat-misaligned-fg: #B69FE0;
+  --cat-misaligned-bg: rgba(182, 159, 224, 0.18);
+  --cat-other-fg: #AEB6C4;
+  --cat-other-bg: rgba(174, 182, 196, 0.16);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 12px 32px -4px rgba(0, 0, 0, 0.55);
+}

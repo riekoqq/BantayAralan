@@ -19,6 +19,8 @@ const Icons = {
   users: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3" stroke="${c}" stroke-width="2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="${c}" stroke-width="2" stroke-linecap="round"/><path d="M16 6.5a3 3 0 0 1 0 5.9M20 20c0-2.8-2-5.1-4.6-5.8" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`,
   barChart: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 20V10M11 20V4M18 20v-7" stroke="${c}" stroke-width="2" stroke-linecap="round"/><path d="M2 20h20" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`,
   lightbulb: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18h6M10 21h4" stroke="${c}" stroke-width="2" stroke-linecap="round"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.45 1 1.15 1 1.9V16h5v-.2c0-.75.4-1.45 1-1.9A6 6 0 0 0 12 3Z" stroke="${c}" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  sun: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="4.5" stroke="${c}" stroke-width="2"/><path d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12H5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`,
+  moon: (c) => `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11Z" stroke="${c}" stroke-width="2" stroke-linejoin="round"/></svg>`,
 };
 
 function iconHtml(name, color, size = 16) {

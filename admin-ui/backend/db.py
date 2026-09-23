@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS head_counts (
     class_date TEXT NOT NULL,           -- ISO date (YYYY-MM-DD)
     point TEXT NOT NULL CHECK (point IN ('start', 'end')),
     count INTEGER NOT NULL,
-    recorded_at TEXT NOT NULL           -- ISO 8601 timestamp
+    recorded_at TEXT NOT NULL,          -- ISO 8601 timestamp
+    source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'scheduled'))
 );
 
 -- Single persisted row: whether detection/event-generation is enabled.
@@ -74,6 +75,7 @@ def init_db():
     with connection() as conn:
         conn.executescript(SCHEMA)
     ensure_detection_state()
+    _migrate_head_counts_source_column()
 
 
 def ensure_detection_state():
@@ -85,7 +87,45 @@ def ensure_detection_state():
         )
 
 
+def _migrate_head_counts_source_column():
+    """Add head_counts.source to a pre-existing DB file created before this
+    column existed. SQLite has no "ADD COLUMN IF NOT EXISTS", so check first.
+    """
+    with connection() as conn:
+        cols = {row["name"] for row in conn.execute("PRAGMA table_info(head_counts)")}
+        if "source" not in cols:
+            conn.execute(
+                "ALTER TABLE head_counts ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'"
+            )
+
+
 def is_seeded() -> bool:
     with connection() as conn:
         row = conn.execute("SELECT COUNT(*) AS n FROM events").fetchone()
         return row["n"] > 0
+
+
+# ------------------------------------------------------------- head counts
+def upsert_head_count(class_date: str, point: str, count: int, source: str = "manual") -> str:
+    """Record one head-count reading, replacing any prior reading for the
+    same (class_date, point). Last write wins -- see
+    Knowledge/12 - Open Questions.md (duplicate-count handling is open).
+    Returns the recorded_at timestamp.
+    """
+    now = datetime.now().isoformat(timespec="seconds")
+    with connection() as conn:
+        conn.execute("DELETE FROM head_counts WHERE class_date = ? AND point = ?", (class_date, point))
+        conn.execute(
+            "INSERT INTO head_counts (class_date, point, count, recorded_at, source) VALUES (?, ?, ?, ?, ?)",
+            (class_date, point, count, now, source),
+        )
+    return now
+
+
+def get_head_count(class_date: str, point: str):
+    """Return the sqlite3.Row for this (class_date, point), or None if not yet recorded."""
+    with connection() as conn:
+        return conn.execute(
+            "SELECT count, recorded_at, source FROM head_counts WHERE class_date = ? AND point = ?",
+            (class_date, point),
+        ).fetchone()

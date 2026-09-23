@@ -28,6 +28,11 @@ const Api = {
     if (!r.ok) throw new Error("headcounts_failed");
     return r.json();
   },
+  async headcountSchedule() {
+    const r = await fetch("/api/headcount-schedule");
+    if (!r.ok) throw new Error("headcount_schedule_failed");
+    return r.json();
+  },
   async recordHeadcount(point, count, classDate) {
     const r = await fetch("/api/headcounts", {
       method: "POST",

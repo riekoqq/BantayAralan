@@ -16,8 +16,14 @@ function currentSection() {
 function renderSidebar() {
   const active = currentSection();
   const sidebar = document.getElementById("sidebar");
+  const theme = Theme.get();
   sidebar.innerHTML = `
-    <div class="wordmark"><div class="mark"></div><span>BantayAralan</span></div>
+    <div class="wordmark-row">
+      <div class="wordmark"><div class="mark"></div><span>BantayAralan</span></div>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+        ${iconHtml(theme === "dark" ? "moon" : "sun", "var(--text-secondary)", 16)}
+      </button>
+    </div>
     <nav class="nav-group">
       <a class="nav-item ${active === "dashboard" ? "active" : ""}" href="#/dashboard">
         ${iconHtml("grid", active === "dashboard" ? "#fff" : "var(--text-tertiary)", 18)} Dashboard
@@ -44,15 +50,30 @@ function renderSidebar() {
     <a class="${active === "events" ? "active" : ""}" href="#/events">Events</a>
     <a class="${active === "headcount" ? "active" : ""}" href="#/headcount">Head Count</a>
     <a class="${active === "insights" ? "active" : ""}" href="#/insights">Insights</a>
+    <button class="theme-toggle" id="theme-toggle-mobile" aria-label="Toggle dark mode" title="Toggle dark mode">
+      ${iconHtml(theme === "dark" ? "moon" : "sun", "var(--text-secondary)", 16)}
+    </button>
   `;
 
+  document.getElementById("theme-toggle")?.addEventListener("click", () => { Theme.toggle(); renderSidebar(); });
+  document.getElementById("theme-toggle-mobile")?.addEventListener("click", () => { Theme.toggle(); renderSidebar(); });
+
   renderStatusBox();
+}
+
+function summarizeHeadcountSchedule(schedule) {
+  const events = schedule.events;
+  const pending = events.find((e) => e.status !== "complete");
+  if (!pending) return "Today's scheduled counts complete";
+  if (pending.status === "performing") return `Performing ${pending.label}…`;
+  if (pending.status === "missed") return `${pending.label} missed (started late)`;
+  return `Waiting for ${pending.label} (${pending.scheduled_time})`;
 }
 
 function renderStatusBox() {
   const el = document.getElementById("system-status");
   if (!el) return;
-  Api.status().then((s) => {
+  Promise.all([Api.status(), Api.headcountSchedule()]).then(([s, schedule]) => {
     if (!document.getElementById("system-status")) return;
     el.innerHTML = `
       <div class="status-line"><span class="status-dot ${s.camera_connected ? "" : "warn"}"></span> Camera: ${s.camera_connected ? "Connected" : "Disconnected"}</div>
@@ -64,6 +85,7 @@ function renderStatusBox() {
         <span>Detection: ${s.detection_enabled ? "Enabled" : "Disabled"}</span>
       </div>
       <div class="status-line"><span class="status-dot"></span> Last event: ${s.last_event_at ? "recorded" : "none yet"}</div>
+      <div class="status-line"><span class="status-dot"></span> ${summarizeHeadcountSchedule(schedule)}</div>
       <p class="status-note">Cameras and head counting keep running either way.</p>
     `;
     document.getElementById("detection-toggle")?.addEventListener("click", async (e) => {

@@ -34,6 +34,7 @@ img, svg { display: block; }
   height: 100vh;
 }
 
+.wordmark-row { display: flex; align-items: center; justify-content: space-between; }
 .wordmark {
   display: flex;
   align-items: center;
@@ -45,6 +46,14 @@ img, svg { display: block; }
   background: var(--brand-primary);
 }
 .wordmark span { font-weight: 600; font-size: 16px; }
+
+.theme-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex-shrink: 0;
+  border-radius: var(--radius-md); border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+.theme-toggle:hover { background: var(--bg-surface-alt); }
 
 .nav-group { display: flex; flex-direction: column; gap: var(--space-xs); margin-top: var(--space-lg); }
 
@@ -289,6 +298,25 @@ img, svg { display: block; }
 .screenshot-viewer img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: var(--bg-surface-alt); }
 .screenshot-caption { padding: var(--space-md); font-size: 12.5px; color: var(--text-secondary); background: var(--bg-surface); }
 
+/* ---------- head count: automated schedule status ---------- */
+.schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-lg); }
+.schedule-card {
+  background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card); padding: var(--space-lg);
+  display: flex; flex-direction: column; gap: var(--space-sm);
+}
+.schedule-card-header { display: flex; align-items: center; gap: var(--space-sm); }
+.schedule-card-title { font-size: 14.5px; font-weight: 600; }
+.schedule-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-tertiary); flex-shrink: 0; }
+.schedule-card.status-waiting .schedule-status-dot { background: var(--text-tertiary); }
+.schedule-card.status-performing .schedule-status-dot { background: var(--status-warning); animation: skeleton-loading 1.4s ease infinite; }
+.schedule-card.status-complete .schedule-status-dot { background: var(--status-success); }
+.schedule-card.status-missed .schedule-status-dot { background: var(--status-danger); }
+.schedule-status-text { font-size: 13px; color: var(--text-secondary); margin: 0; }
+.schedule-details { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm) var(--space-md); margin: var(--space-xs) 0 0; }
+.schedule-details dt { font-size: 10.5px; font-weight: 500; letter-spacing: 0.3px; text-transform: uppercase; color: var(--text-tertiary); margin: 0; }
+.schedule-details dd { font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 2px 0 0; }
+
 /* ---------- head count ---------- */
 .headcount-form {
   display: flex; flex-wrap: wrap; gap: var(--space-xl);
@@ -302,6 +330,7 @@ img, svg { display: block; }
 .headcount-input-row input {
   width: 100%; padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border-default); border-radius: var(--radius-md);
+  background: var(--bg-surface);
   font-size: 14px; color: var(--text-primary);
 }
 .form-error { color: var(--status-danger); font-size: 12.5px; margin: 0 0 var(--space-md); }

@@ -9,6 +9,8 @@ from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory, Response
 
+from . import db
+from . import scheduler
 from .db import connection, init_db, CATEGORY_LABELS
 from .seed import seed
 
@@ -26,6 +28,7 @@ def create_app():
     app = Flask(__name__, static_folder=None)
     init_db()
     seed()  # no-op if already seeded
+    scheduler.start()  # no-op if already started; runs in its own daemon thread
 
     # ---------------------------------------------------------------- pages
     @app.get("/")
@@ -108,13 +111,13 @@ def create_app():
         limit = min(int(request.args.get("limit", 20)), 100)
         with connection() as conn:
             rows = conn.execute(
-                "SELECT class_date, point, count, recorded_at FROM head_counts "
+                "SELECT class_date, point, count, recorded_at, source FROM head_counts "
                 "ORDER BY class_date DESC, point ASC"
             ).fetchall()
         sessions = {}
         for r in rows:
             session = sessions.setdefault(r["class_date"], {"class_date": r["class_date"], "start": None, "end": None})
-            session[r["point"]] = {"count": r["count"], "recorded_at": r["recorded_at"]}
+            session[r["point"]] = {"count": r["count"], "recorded_at": r["recorded_at"], "source": r["source"]}
         sessions_list = sorted(sessions.values(), key=lambda s: s["class_date"], reverse=True)[:limit]
         return jsonify({"sessions": sessions_list})
 
@@ -129,16 +132,16 @@ def create_app():
                 "error": "invalid_input",
                 "message": "point must be 'start' or 'end' and count must be a non-negative integer.",
             }), 400
-        now = datetime.now().isoformat(timespec="seconds")
-        with connection() as conn:
-            # Placeholder duplicate-count policy: last recorded value for this
-            # (date, point) wins. See Knowledge/12 - Open Questions.md.
-            conn.execute("DELETE FROM head_counts WHERE class_date = ? AND point = ?", (class_date, point))
-            conn.execute(
-                "INSERT INTO head_counts (class_date, point, count, recorded_at) VALUES (?, ?, ?, ?)",
-                (class_date, point, count, now),
-            )
+        # Manual entry -- overrides any scheduled reading for the same
+        # (date, point). Placeholder duplicate-count policy: last write
+        # wins. See Knowledge/12 - Open Questions.md.
+        now = db.upsert_head_count(class_date, point, count, source="manual")
         return jsonify({"class_date": class_date, "point": point, "count": count, "recorded_at": now}), 201
+
+    # ------------------------------------------- automated head-count schedule
+    @app.get("/api/headcount-schedule")
+    def headcount_schedule():
+        return jsonify(scheduler.get_schedule_status())
 
     # -------------------------------------------------- statistics/insights
     @app.get("/api/statistics")

@@ -4,7 +4,7 @@ tags: [requirements]
 
 # Functional Requirements
 
-Distinguishes what the proposal specifies the finished system should do from what the current admin-UI prototypes actually implement.
+Distinguishes what the proposal specifies the finished system should do from what the current admin UI actually implements.
 
 ## Proposal requirements (not yet implemented)
 | Requirement | Status |
@@ -14,7 +14,7 @@ Distinguishes what the proposal specifies the finished system should do from wha
 | Real-time seat/table misalignment detection vs. reference positions | Not yet implemented |
 | Object tracking across frames (ByteTrack) | Not yet implemented |
 | Automatic event logging to a database on detection | Not yet implemented (mock data is pre-seeded, not detector-generated) |
-| Automatic snapshot/video capture on event | Not yet implemented (both UIs simulate playback of evidence that doesn't exist) |
+| Automatic snapshot/video capture on event | Not yet implemented (admin-ui simulates playback of evidence that doesn't exist) |
 | Real-time teacher alerting | Not yet implemented |
 | Annotated live video display in GUI | Not yet implemented |
 
@@ -26,9 +26,11 @@ See [[04 - Computer Vision]] and [[Event Model]].
 | Dashboard: summary stats, recent events, category breakdown | Implemented (mock data) | `admin-ui/frontend/js/views/dashboard.js` |
 | Events & Logs: filter by category/date range, search, sort | Implemented (mock data) | `admin-ui/backend/app.py` `list_events` |
 | Event Detail: description, timestamp, screenshot tab, video tab | Implemented (mock/simulated evidence) | `admin-ui/frontend/js/views/eventDetail.js` |
-| Head Count: aggregate beginning/end-of-class counts | Implemented (real form, seeded + user-entered data) | `admin-ui/frontend/js/views/headcount.js`, `/api/headcounts` |
+| Head Count: aggregate beginning/end-of-class counts, manual entry | Implemented (real form, seeded + user-entered data) | `admin-ui/frontend/js/views/headcount.js`, `/api/headcounts` |
+| Head Count: automatic scheduled triggering (no button press) | Implemented (real trigger/storage/status logic; captured *value* is a placeholder, no detector yet) | `admin-ui/backend/scheduler.py`, `schedule_config.py`, `/api/headcount-schedule` — see [[Automated Head-Count Scheduler]] |
 | Detection Enable/Disable | Implemented (real, persisted; no pipeline to actually gate yet) | `admin-ui/frontend/js/app.js` `renderStatusBox()`, `/api/detection-state` |
 | Statistics / Classroom Insights / Suggestions | Implemented (real aggregation + simple rule-based logic over mock data) | `admin-ui/frontend/js/views/insights.js`, `/api/statistics`, `/api/insights`, `/api/suggestions` |
+| Dark Mode toggle | Implemented (real, persisted per-browser, instant apply, centralized CSS tokens) | `admin-ui/frontend/js/theme.js`, `frontend/css/tokens.css` |
 | System status panel (camera/monitoring/detection) | Implemented; camera/monitoring are **hardcoded-true mock values**, detection reflects the real toggle | `admin-ui/backend/app.py` `status()` |
 
 ## Status
@@ -43,3 +45,4 @@ see [[Web Application as Sole Admin UI]].
 - [[UI UX Overview]]
 - [[04 - Computer Vision]]
 - [[Non-Functional Requirements]]
+- [[Automated Head-Count Scheduler]]

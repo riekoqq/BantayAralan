@@ -22,7 +22,7 @@ From the proposal's working draft. Each objective roughly maps to the research q
 5. **Ethical data protocols** — capture and store images in a way that prioritizes student privacy without identifying individuals.
 
 ## Status
-**Proposal Requirement.** None of these objectives has a working implementation yet; the two admin UI prototypes ([[UI UX Overview]]) address only the "review evidence" side (objective 3) with mock data, not live detection.
+**Proposal Requirement.** None of these objectives has a working implementation yet; the admin UI ([[UI UX Overview]]) addresses only the "review evidence" side (objective 3) with mock data, not live detection.
 
 ## Related
 - [[Research Proposal]]

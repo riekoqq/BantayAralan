@@ -17,13 +17,15 @@ A computer-vision system intended to help teachers by:
 
 See [[Research Proposal]] for the full background, research questions, and significance.
 
-## Current project state (as of 2026-09-23)
+## Current project state (as of 2026-09-24)
 | Component | Status | Where |
 |---|---|---|
 | Research proposal | Working draft | [[Research Proposal]], `Team8_BantayAralan-Proposal.docx.pdf` |
 | Prototype paper (revises the proposal; web-only direction) | Working draft, not adviser-reviewed | `BantayAralan-Prototype-Paper.pdf`, `Prototype Paper Changes.md` |
 | Admin UI — web application (Flask + vanilla JS) | Implemented (mock data), **sole and primary admin UI** | `admin-ui/`, [[Admin UI (Browser Prototype)]] |
 | Admin UI — native desktop prototype (PySide6) | **Removed 2026-09-23** (historical) | see [[Desktop App (Native Prototype)]] (marked historical), [[Web Application as Sole Admin UI]] |
+| Automated head-count scheduler (background trigger, no button press) | Implemented (real trigger/storage; captured value is a placeholder) | `admin-ui/backend/scheduler.py`, [[Automated Head-Count Scheduler]] |
+| Dark Mode / theme toggle | Implemented (real, persisted, instant apply) | `admin-ui/frontend/js/theme.js`, [[Admin UI (Browser Prototype)]] |
 | Computer-vision detection pipeline (YOLO11m, ByteTrack, camera capture) | Not yet implemented | [[04 - Computer Vision]] |
 | Real event logging from live detection | Not yet implemented | [[Event Model]] |
 | Real video/screenshot evidence capture | Not yet implemented (UI simulates it) | [[Evidence System]] |
@@ -40,6 +42,7 @@ Design and develop a computer-vision-based behavior detection system that identi
 - **Hardware** (proposed): ceiling-mounted camera, top-down camera, processing PC — [[08 - Hardware]].
 - **Computer vision pipeline** (proposed): YOLO11m + ByteTrack + behavior/alignment logic — [[04 - Computer Vision]].
 - **Event & evidence system** (proposed + partially prototyped in UI): [[Event Model]], [[Evidence System]].
+- **Head count** (aggregate, automated + manual): [[Automated Head-Count Scheduler]].
 - **Database**: SQLite — [[06 - Database]].
 - **Admin UI**: one web application (`admin-ui/`) — [[UI UX Overview]].
 

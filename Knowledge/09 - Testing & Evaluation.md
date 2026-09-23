@@ -15,7 +15,16 @@ far, per `admin-ui/CLAUDE.md`: manual click-through in a live browser —
 dashboard, filters, search, category tabs, empty/no-results states, event
 detail with available/unavailable evidence, simulated video playback, head
 count recording, detection toggle (persists across navigation), all three
-Insights & Statistics tabs, and responsive/mobile layout.
+Insights & Statistics tabs, light/dark theme toggle, and responsive/mobile
+layout.
+
+The automated head-count scheduler ([[Automated Head-Count Scheduler]]) has
+its own dedicated test mechanism, since it can't practically be tested by
+waiting for real clock time: a `BANTAY_TEST_TIME` environment variable
+overrides the scheduler's clock, letting each of the three startup cases
+(idle-before-both, fires-while-running, starts-late-so-marked-missed) be
+exercised in seconds. Never set in production — see `admin-ui/CLAUDE.md` →
+"Testing the scheduler" for the exact commands.
 
 A separate `desktop-app/` prototype was syntax-checked and launched
 successfully but never fully click-tested visually before it was removed
@@ -34,3 +43,4 @@ Planned evaluation: **Not Yet Implemented**. Actual UI testing:
 - [[Evaluation Standards]]
 - [[Methodology]]
 - [[04 - Computer Vision]]
+- [[Automated Head-Count Scheduler]]

@@ -8,7 +8,7 @@ Unresolved items surfaced while migrating project context. None of these should 
 
 ## Evidence retention policy — conflicting signals
 - Current stated working direction: evidence (video + screenshot) is intended to be retained **indefinitely**.
-- However, `admin-ui/CLAUDE.md` and `desktop-app/CLAUDE.md` both say not to add a "retention countdown / auto-delete UI" because "evidence retention policy is an open decision (see root CLAUDE.md 'Open decisions')" — but the current root `CLAUDE.md` **has no section called "Open decisions"** (checked directly; it does not exist in the current file). Either that section was removed at some point without updating the cross-references, or retention is not actually settled as "indefinite" the way the working direction states.
+- However, `admin-ui/CLAUDE.md` says not to add a "retention countdown / auto-delete UI" because "evidence retention policy is an open decision (see root CLAUDE.md 'Open decisions')" — but the current root `CLAUDE.md` **has no section called "Open decisions"** (checked directly; it does not exist in the current file). Either that section was removed at some point without updating the cross-reference, or retention is not actually settled as "indefinite" the way the working direction states. (This note originally also cited a now-removed `desktop-app/CLAUDE.md` making the same claim — that file no longer exists, see [[Web Application as Sole Admin UI]].)
 - **Not resolved here.** Confirm with the project owners whether retention is (a) indefinite as stated, (b) still genuinely open as the `CLAUDE.md` files imply, or (c) something in between (e.g. indefinite by default, but deletable by the admin).
 - Related: [[Evidence System]]
 
@@ -19,8 +19,8 @@ Unresolved items surfaced while migrating project context. None of these should 
 
 ## Head-count duplicate-counting / individual-distinction mechanism
 - `Prototype Paper Changes.md` open issue 2: no technique is specified for avoiding double-counting or distinguishing students within a camera frame while keeping the count aggregate-only.
-- `admin-ui`'s current implementation uses a placeholder policy (last recorded value per date+point wins) purely for its manual-entry form — this is not a proposed answer to the real detection-side question.
-- Related: [[Admin UI (Browser Prototype)]], `admin-ui/CLAUDE.md`
+- `admin-ui`'s current implementation uses a placeholder policy (last recorded value per date+point wins, via `db.upsert_head_count()`) for both its manual-entry form and its automated scheduler (`backend/scheduler.py`, see [[Automated Head-Count Scheduler]]) — the scheduler's captured value is itself a random placeholder, not a real detection. Neither is a proposed answer to the real detection-side question.
+- Related: [[Admin UI (Browser Prototype)]], [[Automated Head-Count Scheduler]], `admin-ui/CLAUDE.md`
 
 ## Statistical/pattern-analysis methodology for insights & suggestions
 - `Prototype Paper Changes.md` open issue 3: no formula, threshold, or analysis frequency is defined for turning accumulated event history into classroom insights and suggestions.
@@ -33,11 +33,11 @@ Unresolved items surfaced while migrating project context. None of these should 
 - Related: [[Admin UI (Browser Prototype)]], `admin-ui/CLAUDE.md`
 
 ## Whether an event-status field will be added
-- Currently absent by design, but both subsystem `CLAUDE.md` files explicitly leave the door open ("don't add one without checking with the user first").
+- Currently absent by design, but `admin-ui/CLAUDE.md` explicitly leaves the door open ("don't add one without checking with the user first").
 - Related: [[No Event-Status Field]]
 
 ## Final video evidence implementation
-- Both UIs simulate video playback; no real capture/encode/store/serve pipeline is designed in detail anywhere in the repo (see [[Evidence System]] "What real evidence capture would require" — a plausible approach is documented, not a decided one).
+- `admin-ui` simulates video playback; no real capture/encode/store/serve pipeline is designed in detail anywhere in the repo (see [[Evidence System]] "What real evidence capture would require" — a plausible approach is documented, not a decided one).
 
 ## Final camera point-of-view / hardware specs
 - The proposal only says "ceiling-mounted" and "top-down" — no model, resolution, FOV, or exact mounting details are specified anywhere.
@@ -55,8 +55,8 @@ Unresolved items surfaced while migrating project context. None of these should 
 - Currently explicitly out of scope ("admin-only, single deployment, no user management"). Not discussed whether a multi-teacher or multi-classroom deployment (which might need it) is ever in scope.
 - Related: [[UI Requirements]]
 
-## Deployment architecture beyond the two current prototypes
-- Both prototypes assume a single machine running everything locally against a local SQLite file. No documented plan exists for how a future integrated CV pipeline + admin UI would be deployed (same machine? separate processing PC feeding a UI over a network? one combined app replacing both prototypes?).
+## Deployment architecture beyond the current admin-UI prototype
+- The current prototype assumes a single machine running everything locally against a local SQLite file. No documented plan exists for how a future integrated CV pipeline + admin UI would be deployed (same machine? separate processing PC feeding a UI over a network? one combined app replacing the current mock-data-only one?).
 
 ## Adviser-approved changes
 - No record exists in this repository of any thesis-adviser consultation outcome yet. Treat the entire proposal as unreviewed-by-adviser working draft until a note appears under `13 - Meeting Notes/` saying otherwise.

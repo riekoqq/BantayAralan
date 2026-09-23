@@ -33,15 +33,19 @@ One admin-UI web application, generating and consuming its own mock data — no 
 flowchart TB
     subgraph adminui [admin-ui - web application]
         Seed[backend/seed.py] --> DB[(SQLite: data/bantayaralan.db - events, head_counts, detection_state)]
+        Sched[backend/scheduler.py - daemon thread] --> DB
         DB --> Flask[Flask API - backend/app.py]
         Flask --> FE[Vanilla JS/HTML/CSS frontend]
     end
 ```
 
-Implements Dashboard, Events & Logs, Event Detail, Head Count, and
-Insights & Statistics (Statistics / Classroom Insights / Suggestions),
-plus a Detection Enable/Disable control, against the mock schema in
-[[06 - Database]].
+Implements Dashboard, Events & Logs, Event Detail, Head Count (manual +
+automated via the background scheduler thread), and Insights & Statistics
+(Statistics / Classroom Insights / Suggestions), plus a Detection
+Enable/Disable control and a light/dark theme, against the mock schema in
+[[06 - Database]]. The scheduler thread is the one part of this diagram
+that runs independently of any HTTP request — see
+[[Automated Head-Count Scheduler]].
 
 ## 1b. Finalized prototype paper's revised pipeline (Expected by current working draft — UI layer implemented, CV layer not)
 From `BantayAralan-Prototype-Paper` (see `Prototype Paper Changes.md`) — resolves open issue 1 (web, not desktop) and adds head count, the detection toggle, and the statistics/insights/suggestions pipeline. The web-app/data-layer half of this is now implemented in `admin-ui/`; the camera/detection half is still section 1 (not implemented):
@@ -76,4 +80,5 @@ layer (not implemented); UI/data layer is **Implemented** in `admin-ui/`.
 - [[Two Admin UI Prototypes]]
 - [[06 - Database]]
 - [[Event Model]]
+- [[Automated Head-Count Scheduler]]
 - [[UI UX Overview]]

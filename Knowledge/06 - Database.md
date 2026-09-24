@@ -51,6 +51,13 @@ still exists to read history.
   other schema changes still require manually updating `admin-ui/backend/db.py`
   and deleting the existing `.db` file.
 
+## Hosting
+Confirmed as a **local-only** decision (2026-09-24): the database is hosted
+on-premises, not as a managed cloud database, to avoid recurring cloud
+hosting costs — see [[Local Hosting for Database and Object Storage]]. This
+was already true in practice (SQLite is a local file); the decision commits
+to keeping it that way rather than migrating to a cloud database later.
+
 ## Proposed extensions (Not Yet Implemented)
 Real video evidence would need at least a `video_path`/`video_url` column (see [[Evidence System]]). No other schema changes are specified in current docs.
 

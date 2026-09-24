@@ -15,7 +15,7 @@ Each event can (in the data model) have a screenshot and/or a video as evidence.
 Per `admin-ui/README.md`'s "Video evidence — backend requirements" section:
 1. A rolling per-camera frame buffer, so a clip can include time *before* the triggering event.
 2. Cutting a clip spanning a defined window around the trigger (e.g. -10s/+10s).
-3. Encoding and storing the clip, with a retention/storage strategy — **unresolved**, see [[12 - Open Questions]].
+3. Encoding and storing the clip. The storage *location* is now decided — local disk/local object storage, not a cloud bucket, per [[Local Hosting for Database and Object Storage]] — but the retention *policy* (how long to keep it) remains **unresolved**, see [[12 - Open Questions]].
 4. Associating the clip with the event row (e.g. a `video_path` column next to `snapshot_available`).
 5. Serving it so a real `<video>` element can seek/scrub it — `admin-ui` is structured so this swap is a contained change (`renderVideoTab`).
 

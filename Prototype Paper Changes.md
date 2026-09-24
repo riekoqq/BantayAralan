@@ -75,3 +75,42 @@ paper's Figures 1–3 were therefore redrawn from scratch based on the architect
 described in this plan and the original figures' descriptive captions — they do not
 visually match the original proposal's diagram style, only its conceptual content,
 corrected for the seven changes above.
+
+## Update — 2026-09-24: camera, detection model, and hosting decisions applied
+
+Following a full repository technical audit and two decisions confirmed directly by
+the project team (see [`Knowledge/11 - Decisions/Camera Model and Detection Model
+Version Confirmed.md`](<Knowledge/11 - Decisions/Camera Model and Detection Model Version Confirmed.md>)
+and [`Knowledge/11 - Decisions/Local Hosting for Database and Object Storage.md`](<Knowledge/11 - Decisions/Local Hosting for Database and Object Storage.md>)),
+this prototype paper was revised:
+
+- **Instruments/Tools (Hardware)** — added a "Camera model" bullet naming the
+  TP-Link VIGI C320I (PoE dome camera), confirmed for at least one of the two
+  camera roles (ceiling-mounted vs. top-down); which role(s) it covers is left
+  as an open implementation decision, not asserted as both.
+- **Instruments/Tools (Software)** — updated `YOLO-based model (e.g., YOLO11m)`
+  to `YOLO-based model (YOLOv8)`, and added a "Local hosting" bullet stating the
+  database (SQLite) and evidence object storage are hosted on-premises rather
+  than on a cloud database/object-storage service, to avoid recurring cloud
+  costs.
+- **Figures 1–3** — regenerated (not hand-redrawn) to match: Figure 1's Inputs
+  box and Figure 2's camera/software captions now reference the confirmed
+  camera and YOLOv8; Figure 2 gained two caption lines (camera model + local
+  hosting) and its "Event Storage" box now reads "Event Storage (SQLite,
+  local)". While regenerating Figure 2, two pre-existing diagram bugs were
+  also fixed: the connector from Head-Count Module to Web Application
+  Interface was floating in empty space instead of touching either box, and
+  Web Application Interface had no visible connector from the
+  Statistical/Insights/Suggestions chain despite the caption text describing
+  that data as available through the web application — both are now
+  connected correctly.
+- **Not changed**: the original proposal PDF (`Team8_BantayAralan-Proposal.docx.pdf`)
+  still says YOLO11m and does not name a camera model — left as-is, since it
+  is a separate historical document, not this prototype paper.
+
+The same two decisions were also applied to the `Knowledge/` vault (`04 - Computer
+Vision.md`, `08 - Hardware.md`, `06 - Database.md`, `05 - Events & Evidence/Evidence
+System.md`, `00 - Project Overview.md`) so the vault and this paper stay consistent.
+Separately, a full technical audit of the repository (Sections 2.1–2.6 and 3.0 of a
+capstone master document, `DOC-CAP-FINAL-2026-008`) was produced the same session as
+a deliverable file outside this repository — it is not stored here.

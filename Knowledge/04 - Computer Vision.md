@@ -7,8 +7,11 @@ status: Not Yet Implemented
 
 Everything below is the proposal's working-draft description of the intended CV pipeline. **None of it has source code in this repository.** No camera integration, no model files, no inference code, no tracking code exist anywhere in the repo.
 
+## Model version — Changed from proposal (2026-09-24)
+The original proposal PDF and this vault previously named **YOLO11m** as the detection model. The project team has since confirmed **YOLOv8** as the current choice (communicated directly, 2026-09-24) — not yet written into the proposal or prototype paper documents. Treat **YOLOv8** as current; **YOLO11m** as superseded proposal text until the source documents are updated to match.
+
 ## Intended components (Proposal Requirement)
-- **Object/pose detection**: YOLO-based model, YOLO11m in the current draft — detects objects and estimates pose (used to infer behaviors like standing).
+- **Object/pose detection**: YOLO-based model — **YOLOv8** per the team's current direction (supersedes the proposal PDF's YOLO11m, see above) — detects objects and estimates pose (used to infer behaviors like standing).
 - **Tracking**: ByteTrack — tracks detected objects/persons across frames.
 - **Behavior logic**: rule-based decisions over tracked poses/objects — standing behavior, trash/clutter presence, seat/table alignment vs. defined reference positions and thresholds.
 - **Two camera perspectives**: a ceiling-mounted camera for behavior detection, a top-down camera for clutter and desk/seat alignment, processed as two largely independent pipelines that converge at event logging — see [[System Architecture]].

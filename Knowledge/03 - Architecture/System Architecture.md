@@ -13,7 +13,7 @@ From the proposal's Conceptual Framework, Block Diagram, and System Flowchart (F
 flowchart LR
     C1[Ceiling camera] --> CV[OpenCV capture]
     C2[Top-down camera] --> AL[Alignment detection module]
-    CV --> YOLO[YOLO11m: pose + object detection]
+    CV --> YOLO[YOLOv8: pose + object detection]
     YOLO --> BT[ByteTrack: object tracking]
     BT --> BL[Behavior logic: standing / trash / clutter]
     AL --> BL
@@ -24,7 +24,7 @@ flowchart LR
     GUI --> ALERT[Teacher alert]
 ```
 
-None of this — capture, YOLO11m, ByteTrack, behavior/alignment logic, or live event generation — exists as code in this repository. See [[04 - Computer Vision]].
+None of this — capture, YOLOv8, ByteTrack, behavior/alignment logic, or live event generation — exists as code in this repository. See [[04 - Computer Vision]].
 
 ## 2. Current implemented architecture (Implemented, UI-only)
 One admin-UI web application, generating and consuming its own mock data — no real backend, no detection pipeline behind it. (A second, parallel `desktop-app/` prototype existed through 2026-09-23 and was removed once the finalized prototype paper settled the direction as web-only — see [[Two Admin UI Prototypes]], now historical.)

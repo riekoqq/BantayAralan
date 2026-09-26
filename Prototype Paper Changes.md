@@ -114,3 +114,30 @@ System.md`, `00 - Project Overview.md`) so the vault and this paper stay consist
 Separately, a full technical audit of the repository (Sections 2.1–2.6 and 3.0 of a
 capstone master document, `DOC-CAP-FINAL-2026-008`) was produced the same session as
 a deliverable file outside this repository — it is not stored here.
+
+## Update — 2026-09-26: network switch and full processing-PC specification applied
+
+While preparing `Documentation/Feasibility Study.md`, the project team confirmed two
+more previously-undocumented hardware facts directly (see
+[`Knowledge/11 - Decisions/Network Switch and Processing PC Specs Confirmed.md`](<Knowledge/11 - Decisions/Network Switch and Processing PC Specs Confirmed.md>)):
+a network switch (TP-Link TL-SG1005LP) and the processing PC's full specification
+(AMD Ryzen 5 5600 CPU, NVIDIA GeForce RTX 2060 GPU, 16 GB 3200 MHz RAM, 256 GB M.2 SSD
++ 1 TB HDD). This revision was applied to:
+
+- **This prototype paper** (`BantayAralan-Prototype-Paper.docx`) — added a "Network
+  switch" bullet and a "Processing PC specification" bullet to the Instruments/Tools
+  (Hardware) section, immediately after the existing "Computer/Laptop" bullet.
+- **`DOC-CAP-FINAL-2026-008.docx`** — added a processing-PC-specification paragraph to
+  §2.4 "Deployment Plan & Sustainability" and a network-switch paragraph to §2.5
+  "Hardware Architecture," plus a new revision-history row (1.1).
+- **The `Knowledge/` vault** — `08 - Hardware.md` and the new decision note above.
+
+**Not changed**: the original proposal PDF (`Team8_BantayAralan-Proposal.docx.pdf`),
+per standing instruction that it is never edited under any circumstance.
+
+**Caveat**: only the `.docx` versions of the prototype paper and
+`DOC-CAP-FINAL-2026-008` were updated directly (XML-level edits, validated
+structurally with the docx skill's paragraph-count check). The corresponding `.pdf`
+exports were **not** regenerated in this session — no LibreOffice/Word rendering tool
+was available in this environment to produce a matching PDF. Re-export both PDFs from
+the updated `.docx` files before they are treated as current for distribution.

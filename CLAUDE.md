@@ -41,8 +41,13 @@ restate the knowledge base.
   it no longer exists in the working tree.
 - [`anti-ai-slop/`](anti-ai-slop/) is a separate third-party tool (its own
   git repo), not BantayAralan code — never edit it as part of this project.
-- The CV pipeline (YOLO11m, ByteTrack, camera capture) described in the
-  proposal has **no source code anywhere in this repo**.
+- The CV pipeline (YOLOv8, ByteTrack, camera capture — see
+  [Knowledge/04 - Computer Vision.md](<Knowledge/04%20-%20Computer%20Vision.md>)
+  for the model-version correction) described in the proposal has **no
+  source code anywhere in this repo**. [`detection/`](detection/) holds
+  only dataset/labeling tracking docs for an in-progress no-code
+  proof-of-concept (see its own `CLAUDE.md`) — not runnable training or
+  inference code.
 
 When more source code is added, update this file, the relevant `Knowledge/`
 notes, and add a scoped subsystem `CLAUDE.md` — don't let any of them go

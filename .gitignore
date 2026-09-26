@@ -5,3 +5,11 @@ __pycache__/
 
 anti-ai-slop/
 .claude/scheduled_tasks.lock
+
+# detection/ dataset tracking — never commit raw/labeled images, exports, or weights
+detection/dataset/images/
+detection/dataset/exports/
+detection/dataset/roboflow_export/
+detection/runs/
+*.pt
+*.onnx

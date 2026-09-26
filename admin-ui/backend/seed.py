@@ -77,7 +77,11 @@ def seed(force: bool = False, count: int = 42, seed_value: int = 20260921):
         snapshot_available = 1 if evidence_kind in ("both", "snapshot_only") else 0
         evidence_note = rng.choice(UNAVAILABLE_NOTES) if evidence_kind == "unavailable" else None
 
-        rows.append((category, title, description, occurred_at, video_available, snapshot_available, evidence_note))
+        # Seeded events are closed-out mock history, not open items -- so
+        # status='resolved', matching what _migrate_events_status_column()
+        # backfills for pre-existing rows. Only detection/monitor_trash.py's
+        # real events are ever inserted as 'active'.
+        rows.append((category, title, description, occurred_at, video_available, snapshot_available, evidence_note, "resolved"))
 
     with connection() as conn:
         if force:
@@ -85,8 +89,8 @@ def seed(force: bool = False, count: int = 42, seed_value: int = 20260921):
         conn.executemany(
             """
             INSERT INTO events
-                (category, title, description, occurred_at, video_available, snapshot_available, evidence_note)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                (category, title, description, occurred_at, video_available, snapshot_available, evidence_note, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             rows,
         )

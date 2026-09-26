@@ -40,8 +40,8 @@ async function renderEvents(root, initialQuery = {}) {
   const body = root.querySelector("#events-body");
   let debounceTimer = null;
 
-  async function load() {
-    body.innerHTML = skeletonGrid("row", 6);
+  async function load(silent = false) {
+    if (!silent) body.innerHTML = skeletonGrid("row", 6);
     try {
       const params = { sort: state.sort, limit: EVENTS_PAGE_SIZE, offset: state.offset };
       if (state.category !== "all") params.category = state.category;
@@ -50,11 +50,12 @@ async function renderEvents(root, initialQuery = {}) {
       const data = await Api.events(params);
       renderList(body, data, state);
     } catch (err) {
+      if (silent) return; // don't blow away a working list over one missed poll
       body.innerHTML = errorStateHtml({
         title: "Unable to load events",
         desc: "The admin UI couldn't reach the backend. Check that the app server is running and try again.",
       });
-      body.querySelector('[data-action="retry"]')?.addEventListener("click", load);
+      body.querySelector('[data-action="retry"]')?.addEventListener("click", () => load());
     }
   }
 
@@ -80,6 +81,7 @@ async function renderEvents(root, initialQuery = {}) {
   });
 
   load();
+  startPolling(() => load(true));
 }
 
 function renderTabs(container, active) {

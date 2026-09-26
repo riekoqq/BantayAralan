@@ -12,17 +12,26 @@ async function renderDashboard(root) {
     <div class="event-grid" id="recent-events">${skeletonGrid("card", 6)}</div>
   `;
 
+  await loadDashboardData(root, { silent: false });
+  startPolling(() => loadDashboardData(root, { silent: true }));
+}
+
+async function loadDashboardData(root, { silent }) {
+  const statGrid = root.querySelector("#stat-grid");
+  const recent = root.querySelector("#recent-events");
+  if (!statGrid || !recent) return; // navigated away since the poll fired
   try {
     const data = await Api.summary();
-    renderStats(root.querySelector("#stat-grid"), data);
-    renderRecent(root.querySelector("#recent-events"), data.recent);
+    renderStats(statGrid, data);
+    renderRecent(recent, data.recent);
   } catch (err) {
-    root.querySelector("#stat-grid").innerHTML = "";
-    root.querySelector("#recent-events").innerHTML = errorStateHtml({
+    if (silent) return; // don't replace a working view with an error over one missed poll
+    statGrid.innerHTML = "";
+    recent.innerHTML = errorStateHtml({
       title: "Unable to load dashboard data",
       desc: "The admin UI couldn't reach the backend. Check that the app server is running and try again.",
     });
-    root.querySelector('[data-action="retry"]')?.addEventListener("click", () => renderDashboard(root));
+    recent.querySelector('[data-action="retry"]')?.addEventListener("click", () => renderDashboard(root));
   }
 }
 

@@ -44,12 +44,15 @@ still exists to read history.
 ## Lifecycle
 - `init_db()` creates all tables if missing (idempotent, `CREATE TABLE IF NOT EXISTS`), ensures a default `detection_state` row exists, and runs `_migrate_head_counts_source_column()`.
 - `seed()` populates ~42 synthetic events and ~10 synthetic head-count sessions **only if those tables are empty** — editing the seed generator has no visible effect until the `.db` file is deleted and the app is re-run.
-- **No general migrations system**, but one ad hoc migration exists:
-  `_migrate_head_counts_source_column()` in `db.py` adds the `source`
-  column via `ALTER TABLE` (checked first with `PRAGMA table_info`) for any
-  `.db` file created before that column existed. Beyond that one case,
-  other schema changes still require manually updating `admin-ui/backend/db.py`
-  and deleting the existing `.db` file.
+- **No general migrations system**, but two ad hoc migrations exist:
+  `_migrate_head_counts_source_column()` and, added 2026-09-26,
+  `_migrate_events_status_column()` — both add a column via `ALTER TABLE`
+  (checked first with `PRAGMA table_info`) for a `.db` file created before
+  that column existed. `_migrate_events_status_column()` backfills existing
+  rows to `status='resolved'` (historical events, not open items) — see
+  [[Trash Monitoring Integration]]. Beyond these two cases, other schema
+  changes still require manually updating `admin-ui/backend/db.py` and
+  deleting the existing `.db` file.
 
 ## Hosting
 Confirmed as a **local-only** decision (2026-09-24): the database is hosted
@@ -62,11 +65,16 @@ to keeping it that way rather than migrating to a cloud database later.
 Real video evidence would need at least a `video_path`/`video_url` column (see [[Evidence System]]). No other schema changes are specified in current docs.
 
 ## Status
-**Implemented** (mock schema). **Not Yet Implemented**: any write path from
-real detection, any schema for confidence scores, camera source, or
-video/audio file references beyond the flags already present. Head-count
-duplicate-handling and detection-toggle's real backend scope remain open —
-see [[12 - Open Questions]].
+**Partially implemented**. Schema/mock data Implemented. A real write path
+from detection now exists (`detection/monitor_trash.py` → `db.insert_event()`
+/ `db.resolve_event()`, `trash` category only, manual script — see
+[[Trash Monitoring Integration]]), so "any write path from real detection"
+is no longer wholesale Not Yet Implemented. Still **Not Yet Implemented**:
+any schema for confidence scores, bbox/frame linkage, or camera source
+(`monitor_trash.py` keeps position tracking in process memory, not the DB —
+see its "Known limitation"), and any detection write path for `misaligned`
+or `standing`. Head-count duplicate-handling and detection-toggle's real
+backend scope remain open — see [[12 - Open Questions]].
 
 ## Related
 - [[Event Model]]
@@ -74,3 +82,4 @@ see [[12 - Open Questions]].
 - [[Manual Head-Count Entry Removed]]
 - [[Two Admin UI Prototypes]]
 - [[Evidence System]]
+- [[Trash Monitoring Integration]]

@@ -14,9 +14,15 @@ documents/
 dataset/
 
 # detection/ dataset tracking — never commit raw/labeled images, exports, or weights
-detection/dataset/images/
+detection/dataset/train/images/
+detection/dataset/valid/images/
+detection/dataset/test/images/
 detection/dataset/exports/
 detection/dataset/roboflow_export/
 detection/runs/
+detection/dataset/*.zip
 *.pt
 *.onnx
+
+# real captured event snapshots from detection/monitor_trash.py — local only
+admin-ui/data/snapshots/

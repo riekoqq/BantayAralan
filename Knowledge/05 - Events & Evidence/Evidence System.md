@@ -6,10 +6,23 @@ tags: [events, evidence]
 
 Each event can (in the data model) have a screenshot and/or a video as evidence. Today, **all evidence is simulated or generated placeholder content** — no real camera imagery exists anywhere in the repository.
 
-## Current implementation (Implemented, simulated)
-- **Snapshot evidence**: `admin-ui` serves a generated placeholder SVG per event (`/api/events/<id>/snapshot.svg`, built in `backend/app.py`'s `_placeholder_svg`) — not a real camera frame. (A removed `desktop-app/` prototype drew an equivalent placeholder with `QPainter` — see [[Web Application as Sole Admin UI]].)
-- **Video evidence**: fully simulated — `admin-ui`'s `renderVideoTab` (`frontend/js/views/eventDetail.js`) fakes playback with a JS timer. No actual video file or codec is involved.
-- **Evidence availability mix**: seeded with `EVIDENCE_WEIGHTS` (~68% both, ~16% snapshot only, ~6% video only, ~10% unavailable) to exercise the "Evidence Unavailable" UI state realistically.
+## Current implementation
+- **Snapshot evidence — partially real as of 2026-09-26**: `admin-ui` serves
+  `/api/events/<id>/snapshot`. For seeded/mock events this is still a
+  generated placeholder SVG (`backend/app.py`'s `_placeholder_svg`) — not a
+  real camera frame. (A removed `desktop-app/` prototype drew an equivalent
+  placeholder with `QPainter` — see [[Web Application as Sole Admin UI]].)
+  But for real events created by `detection/monitor_trash.py`, this now
+  serves an **actual captured frame** (`admin-ui/data/snapshots/<id>.jpg`,
+  with the triggering detection box drawn on it) — see
+  [[Trash Monitoring Integration]]. Same URL either way; the route checks
+  whether a real file exists and falls back to the placeholder if not.
+  **No face/identity redaction is applied** to these real captures — see
+  the privacy caveat in [[Trash Monitoring Integration]] and
+  [.claude/rules/privacy-and-ethics.md](../../.claude/rules/privacy-and-ethics.md);
+  this is a known, flagged gap, not an oversight.
+- **Video evidence**: fully simulated — `admin-ui`'s `renderVideoTab` (`frontend/js/views/eventDetail.js`) fakes playback with a JS timer. No actual video file or codec is involved, for either mock or real events.
+- **Evidence availability mix**: seeded events use `EVIDENCE_WEIGHTS` (~68% both, ~16% snapshot only, ~6% video only, ~10% unavailable) to exercise the "Evidence Unavailable" UI state realistically. Real `monitor_trash.py` events always have `video_available=0` (no video capture exists) and `snapshot_available=1` only when the frame save succeeds.
 
 ## What real evidence capture would require (documented, not built)
 Per `admin-ui/README.md`'s "Video evidence — backend requirements" section:
@@ -24,10 +37,17 @@ Per `admin-ui/README.md`'s "Video evidence — backend requirements" section:
 - Evidence — video and screenshot — is currently intended to be retained **indefinitely**. **This conflicts with existing repo documentation**, which calls retention an open, unresolved decision — see [[12 - Open Questions]] for the unresolved conflict; do not treat "indefinite retention" as settled without checking there first.
 
 ## Status
-**Implemented** (simulated UI only), **Not Yet Implemented** (real capture/storage), retention policy **Unclear** (see [[12 - Open Questions]]).
+**Partially implemented**: snapshot evidence is now Implemented (real
+capture) for `trash` events via `detection/monitor_trash.py`; still
+simulated-only for every other category. Video evidence remains **Not Yet
+Implemented** (fully simulated) for all events. Retention policy
+**Unclear** (see [[12 - Open Questions]]) — real snapshot files are
+currently kept indefinitely by default (nothing deletes them), which is
+worth revisiting once that policy question is actually resolved.
 
 ## Related
 - [[Event Model]]
 - [[06 - Database]]
 - [[10 - Privacy & Ethics]]
 - [[12 - Open Questions]]
+- [[Trash Monitoring Integration]]

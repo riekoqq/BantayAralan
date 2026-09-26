@@ -36,22 +36,13 @@ async function renderEventDetail(root, id) {
           <div class="evidence-body" id="evidence-body"></div>
         </div>
       </div>
-      <div class="info-card">
-        ${categoryBadgeHtml(event)}
-        <h1 class="title">${event.title}</h1>
-        <p class="desc">${event.description}</p>
-        <div class="meta">
-          <span>${event.date_label}</span>
-          <span>${event.time_label}</span>
-        </div>
-        ${evidenceTagHtml(event)}
-        <p class="privacy-note">Shows only what's needed to review this event. No student names, IDs, or facial-recognition results are captured or displayed.</p>
-      </div>
+      <div class="info-card" id="info-card"></div>
     </div>
   `;
 
   const evidenceBody = root.querySelector("#evidence-body");
   const tabs = root.querySelector("#evidence-tabs");
+  renderInfoCard(root.querySelector("#info-card"), event);
 
   function showTab(tab) {
     tabs.querySelectorAll(".evidence-tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
@@ -65,6 +56,38 @@ async function renderEventDetail(root, id) {
   });
 
   showTab("video");
+
+  // Poll just the status/description -- leaves the evidence tabs (and any
+  // playing simulated video) alone so a background refresh doesn't reset
+  // what the viewer is looking at. See app.js's polling note.
+  startPolling(async () => {
+    const infoCard = document.getElementById("info-card");
+    if (!infoCard) return; // navigated away since the poll fired
+    try {
+      const fresh = await Api.event(id);
+      if (fresh.status !== event.status || fresh.description !== event.description) {
+        event = fresh;
+        renderInfoCard(infoCard, event);
+      }
+    } catch (err) {
+      // silent -- a missed background refresh isn't worth surfacing an error for
+    }
+  });
+}
+
+function renderInfoCard(container, event) {
+  container.innerHTML = `
+    ${categoryBadgeHtml(event)}
+    ${statusTagHtml(event)}
+    <h1 class="title">${event.title}</h1>
+    <p class="desc">${event.description}</p>
+    <div class="meta">
+      <span>${event.date_label}</span>
+      <span>${event.time_label}</span>
+    </div>
+    ${evidenceTagHtml(event)}
+    <p class="privacy-note">Shows only what's needed to review this event. No student names, IDs, or facial-recognition results are captured or displayed.</p>
+  `;
 }
 
 function renderVideoTab(container, event) {

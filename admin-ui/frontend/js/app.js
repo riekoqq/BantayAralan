@@ -1,3 +1,23 @@
+// Lightweight polling so open views (dashboard, events list, event detail)
+// pick up new/resolved events without a manual refresh -- see
+// Knowledge/11 - Decisions/Trash Monitoring Integration.md. Deliberately
+// polling, not push (SSE/WebSocket): keeps the "reviewed periodically, not
+// instant alerts" framing from this file's UI-copy guidance, just without
+// requiring a manual reload. Every view that starts a poll must stop it on
+// navigation, which happens automatically here since route() always calls
+// stopPolling() before rendering the next view.
+const POLL_INTERVAL_MS = 4000;
+let activePoll = null;
+
+function startPolling(fn) {
+  stopPolling();
+  activePoll = setInterval(fn, POLL_INTERVAL_MS);
+}
+
+function stopPolling() {
+  if (activePoll) { clearInterval(activePoll); activePoll = null; }
+}
+
 const ROUTES = {
   dashboard: { label: "Dashboard", icon: "grid" },
   events: { label: "Events & Logs", icon: "list" },
@@ -110,6 +130,7 @@ function parseHash() {
 }
 
 async function route() {
+  stopPolling();
   renderSidebar();
   const root = document.getElementById("view-root");
   const parts = parseHash();

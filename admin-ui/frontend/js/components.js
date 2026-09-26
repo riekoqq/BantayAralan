@@ -14,6 +14,14 @@ function categoryBadgeHtml(event) {
   return `<span class="badge cat-${event.category}">${iconHtml(icon, color, 14)}${label}</span>`;
 }
 
+function statusTagHtml(event) {
+  if (!event.status) return "";
+  const isActive = event.status === "active";
+  const icon = isActive ? "alertCircle" : "checkCircle";
+  const label = isActive ? "Active" : "Resolved";
+  return `<span class="status-tag ${event.status}">${iconHtml(icon, "currentColor", 12)}${label}</span>`;
+}
+
 function evidenceTagHtml(event) {
   const map = {
     both: "Video + Snapshot Available",
@@ -30,6 +38,7 @@ function eventCardHtml(event) {
   return `
     <article class="event-card" data-event-id="${event.id}" role="button" tabindex="0">
       ${categoryBadgeHtml(event)}
+      ${statusTagHtml(event)}
       <h3 class="title">${event.title}</h3>
       <p class="desc">${event.description}</p>
       <div class="datetime">${event.date_label} &bull; ${event.time_label}</div>
@@ -41,6 +50,7 @@ function eventRowHtml(event) {
   return `
     <div class="event-row" data-event-id="${event.id}" role="button" tabindex="0">
       ${categoryBadgeHtml(event)}
+      ${statusTagHtml(event)}
       <div class="row-desc">
         <p class="title">${event.title}</p>
         <p class="sub">${event.description}</p>

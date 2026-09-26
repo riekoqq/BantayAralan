@@ -7,13 +7,14 @@ pipeline behind this -- see CLAUDE.md files for implementation status.
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from flask import Flask, jsonify, request, send_from_directory, Response
+from flask import Flask, jsonify, request, send_from_directory, send_file, Response
 
 from . import scheduler
-from .db import connection, init_db, CATEGORY_LABELS
+from .db import connection, init_db, CATEGORY_LABELS, DATA_DIR
 from .seed import seed
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+SNAPSHOTS_DIR = DATA_DIR / "snapshots"
 
 CATEGORY_ICON_COLOR = {
     "standing": "#B7791F",
@@ -209,12 +210,20 @@ def create_app():
             return jsonify({"error": "not_found", "message": "Event not found."}), 404
         return jsonify(_serialize_event(row, detail=True))
 
-    @app.get("/api/events/<int:event_id>/snapshot.svg")
-    def snapshot_placeholder(event_id):
+    @app.get("/api/events/<int:event_id>/snapshot")
+    def snapshot(event_id):
+        """Real captured frame if detection/monitor_trash.py saved one for
+        this event (data/snapshots/<id>.jpg); otherwise the generated
+        placeholder icon used by every seeded/mock event. Same URL either
+        way -- the browser reads Content-Type, not the path -- so the
+        frontend doesn't need to know which kind it's getting."""
         with connection() as conn:
             row = conn.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
         if row is None or not row["snapshot_available"]:
             return Response(status=404)
+        real_path = SNAPSHOTS_DIR / f"{event_id}.jpg"
+        if real_path.exists():
+            return send_file(real_path, mimetype="image/jpeg")
         color = CATEGORY_ICON_COLOR.get(row["category"], "#475266")
         svg = _placeholder_svg(color, row["category"])
         return Response(svg, mimetype="image/svg+xml")
@@ -234,6 +243,7 @@ def _serialize_event(row, detail: bool = False):
         "id": row["id"],
         "category": row["category"],
         "category_label": CATEGORY_LABELS[row["category"]],
+        "status": row["status"],
         "title": row["title"],
         "description": row["description"],
         "occurred_at": row["occurred_at"],
@@ -245,7 +255,7 @@ def _serialize_event(row, detail: bool = False):
         "evidence_note": row["evidence_note"],
     }
     if detail:
-        data["snapshot_url"] = f"/api/events/{row['id']}/snapshot.svg" if row["snapshot_available"] else None
+        data["snapshot_url"] = f"/api/events/{row['id']}/snapshot" if row["snapshot_available"] else None
     return data
 
 

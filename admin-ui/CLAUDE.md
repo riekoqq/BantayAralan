@@ -1,13 +1,20 @@
 # admin-ui — BantayAralan Admin Interface Prototype
 
-Status: **Implemented** (as a UI/UX prototype with mock data — not connected
-to any real detection pipeline). This is the **sole and primary** BantayAralan
-admin UI — a separate native desktop prototype (`desktop-app/`, PySide6)
-existed briefly and was removed on 2026-09-23 once the finalized prototype
-paper settled the direction as web-only; see
+Status: **Implemented** (as a UI/UX prototype, primarily mock data). This is
+the **sole and primary** BantayAralan admin UI — a separate native desktop
+prototype (`desktop-app/`, PySide6) existed briefly and was removed on
+2026-09-23 once the finalized prototype paper settled the direction as
+web-only; see
 [Knowledge/11 - Decisions/Web Application as Sole Admin UI.md](<../Knowledge/11 - Decisions/Web Application as Sole Admin UI.md>).
 See root [`CLAUDE.md`](../CLAUDE.md) for the project-wide working-draft/
 status-label rules; this file assumes you've read those.
+
+**Partial exception to "not connected to any real detection pipeline"**
+(2026-09-26): [`../detection/monitor_trash.py`](../detection/monitor_trash.py)
+is a one-off script (not a persistent service) that can write real `trash`
+events into this app's database by importing `backend/db.py` directly. When
+it's not running, this app behaves exactly as before — mock data only. See
+[Knowledge/11 - Decisions/Trash Monitoring Integration.md](<../Knowledge/11 - Decisions/Trash Monitoring Integration.md>).
 
 ## Purpose
 
@@ -69,6 +76,43 @@ anywhere — per the design brief this was built from.
   `python3 -c "t=open('frontend/css/tokens.css').read(); print(t.count('/*'), t.count('*/'), t.count('{'), t.count('}'))"`.
 - **Automated Head-Count Scheduler** (`backend/schedule_config.py`,
   `backend/scheduler.py`) — see the dedicated section below.
+- **Event status** (`events.status`, `db.insert_event()` /
+  `db.resolve_event()` / `db.list_active_events()`, `statusTagHtml()` in
+  `frontend/js/components.js`) — see the dedicated section below. This
+  reverses the previously-documented
+  [No Event-Status Field](<../Knowledge/11 - Decisions/No Event-Status Field.md>)
+  decision, with explicit user confirmation, specifically to support real
+  trash-monitoring events (below) needing an active/resolved lifecycle.
+  Seeded/historical events are always `'resolved'` — only
+  `detection/monitor_trash.py` ever inserts an `'active'` row.
+- **Live polling** (`startPolling()`/`stopPolling()` in `frontend/js/app.js`,
+  used by `dashboard.js`, `events.js`, `eventDetail.js`) — see the
+  dedicated section below. Added so a new/resolved event from
+  `monitor_trash.py` shows up without a manual browser refresh.
+
+## Live polling (no manual refresh needed)
+
+Added 2026-09-26 alongside the trash-monitoring integration, so an open
+Dashboard/Events/Event-Detail view picks up new or resolved events on its
+own. Deliberately **polling every 4s (`POLL_INTERVAL_MS` in `app.js`), not
+push** (no WebSocket/SSE) — keeps this file's existing "avoid real-time-alert
+framing" guidance (below) intact: views quietly refresh, nothing pops up or
+notifies.
+
+- `startPolling(fn)` / `stopPolling()` in `app.js` — one shared interval
+  slot. `route()` calls `stopPolling()` before rendering the next view, so
+  navigating away always cleans up; a view that wants live updates calls
+  `startPolling(...)` after its first render.
+- Each view polls **silently** — re-fetches and updates in place, no
+  skeleton flash, and a failed background poll is swallowed rather than
+  replacing a working view with an error (only the *first* load shows the
+  skeleton/error states).
+- `eventDetail.js` polls just the info-card (status/description) via a
+  dedicated `renderInfoCard()`, deliberately leaving the evidence tabs
+  alone — a background refresh must not reset which tab is open or
+  interrupt the simulated video player.
+- `events.js` polls with whatever filters/offset are currently set, so a
+  user's search/category/page selection survives the refresh.
 
 ## Automated head-count scheduler
 
@@ -116,6 +160,36 @@ paper's Head Count requirement. Design, in one place per concern:
   `"YYYY-MM-DD HH:MM:SS"`) before starting the app — see "Testing the
   scheduler" under Commands below. Never set this in a real deployment.
 
+## Event status (active/resolved)
+
+`events.status` is `'active'` or `'resolved'`, default `'active'` at the
+schema level, but every code path except one always writes explicitly:
+
+- `db.insert_event(...)` always inserts `status='active'` — the only
+  caller today is `detection/monitor_trash.py`.
+- `db.resolve_event(event_id)` flips one row to `'resolved'` — same, only
+  caller is `monitor_trash.py`, when a tracked item hasn't been seen for
+  its miss-grace window.
+- `db.list_active_events(category=None)` — reads active rows; used by
+  `monitor_trash.py` to know what's currently open, not by the web UI.
+- `backend/seed.py` explicitly inserts every synthetic event as
+  `'resolved'` — seeded history is closed-out mock data, never "still
+  open." Don't change this default without checking with the user first,
+  same as the field's own existence (see the decision doc below).
+- `frontend/js/components.js`'s `statusTagHtml()` renders the badge
+  (`.status-tag.active` / `.status-tag.resolved`, `--status-warning` /
+  `--status-success` tokens — both have light+dark variants already).
+  Wired into `eventCardHtml`, `eventRowHtml`, and `eventDetail.js`'s info
+  card — anywhere `evidenceTagHtml()` appears, `statusTagHtml()` is right
+  next to it.
+
+This exists specifically to support `detection/monitor_trash.py`'s
+active/resolved lifecycle for real trash detections — see
+[Knowledge/11 - Decisions/Trash Monitoring Integration.md](<../Knowledge/11 - Decisions/Trash Monitoring Integration.md>)
+for the full reasoning, including why this reverses the earlier
+[No Event-Status Field](<../Knowledge/11 - Decisions/No Event-Status Field.md>)
+decision rather than working around it.
+
 ## Architecture
 
 - **Backend**: `backend/app.py` — a small Flask app. `create_app()` wires
@@ -133,7 +207,10 @@ paper's Head Count requirement. Design, in one place per concern:
   code path writes it anymore; every row is `'scheduled'` going forward),
   `detection_state` (see that file for the exact schema rather than
   duplicating it here). Lives at `data/bantayaralan.db`, created on first
-  run.
+  run. `events.status` (`'active'`/`'resolved'`, default `'active'`, added
+  2026-09-26 — see "Event status" below) is backfilled to `'resolved'` for
+  any pre-existing row by `_migrate_events_status_column()`, since old rows
+  are historical/seeded, not open items.
 - **Scheduling**: `backend/schedule_config.py` (times) +
   `backend/scheduler.py` (the background thread/trigger logic) — see
   "Automated head-count scheduler" above.
@@ -171,8 +248,11 @@ under a `[data-theme="dark"]` block for Dark Mode — see above.
 - **Category badges are never color-only** — each one pairs an icon + a
   text label (`categoryBadgeHtml` in `components.js`). Keep that pairing if
   you touch this component.
-- **No event-status field** (New/Reviewed/Resolved) — intentionally absent
-  per the design brief. Don't add one without checking with the user first.
+- **Event status is now active/resolved only** (added 2026-09-26 with
+  explicit user confirmation — see "Event status" above) — the original
+  design brief omitted any status field entirely; don't expand this to a
+  richer New/Reviewed/Resolved-style workflow without checking with the
+  user first, same as the field's original absence required.
 - **No retention countdown / auto-delete UI** — evidence retention policy is
   an open decision (see root CLAUDE.md "Open decisions"); the UI must not
   imply an expiry that hasn't been decided.
@@ -215,6 +295,12 @@ python run_desktop.py             # desktop window mode — needs `pip install p
 python backend/seed.py            # force-reseed mock data (drops existing rows)
 python -m py_compile run_web.py run_desktop.py backend/*.py   # quick syntax check
 ```
+
+To see real detection-driven events alongside the mock data, run the web
+app and, separately, `detection/monitor_trash.py` (see
+[`detection/CLAUDE.md`](../detection/CLAUDE.md)) — it writes directly into
+the same `data/bantayaralan.db` the running app reads from, no restart
+needed to see new events appear.
 
 ### Testing the scheduler
 

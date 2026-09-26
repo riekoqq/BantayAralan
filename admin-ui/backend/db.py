@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS events (
     occurred_at TEXT NOT NULL,          -- ISO 8601 timestamp
     video_available INTEGER NOT NULL DEFAULT 0,
     snapshot_available INTEGER NOT NULL DEFAULT 0,
-    evidence_note TEXT                  -- shown when evidence is unavailable
+    evidence_note TEXT,                 -- shown when evidence is unavailable
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'resolved'))
 );
 
 -- Aggregate student head counts at the beginning/end of a class session.
@@ -76,6 +77,7 @@ def init_db():
         conn.executescript(SCHEMA)
     ensure_detection_state()
     _migrate_head_counts_source_column()
+    _migrate_events_status_column()
 
 
 def ensure_detection_state():
@@ -99,10 +101,77 @@ def _migrate_head_counts_source_column():
             )
 
 
+def _migrate_events_status_column():
+    """Add events.status to a pre-existing DB file created before this column
+    existed. SQLite has no "ADD COLUMN IF NOT EXISTS", so check first. New
+    rows already get 'active' from the column default; this only backfills
+    old rows, which are historical/seeded events, not currently-open ones.
+    """
+    with connection() as conn:
+        cols = {row["name"] for row in conn.execute("PRAGMA table_info(events)")}
+        if "status" not in cols:
+            conn.execute(
+                "ALTER TABLE events ADD COLUMN status TEXT NOT NULL DEFAULT 'active'"
+            )
+            conn.execute("UPDATE events SET status = 'resolved'")
+
+
 def is_seeded() -> bool:
     with connection() as conn:
         row = conn.execute("SELECT COUNT(*) AS n FROM events").fetchone()
         return row["n"] > 0
+
+
+# ------------------------------------------------------------------ events
+def insert_event(
+    category: str,
+    title: str,
+    description: str,
+    occurred_at: str = None,
+    video_available: int = 0,
+    snapshot_available: int = 0,
+    evidence_note: str = None,
+) -> int:
+    """Insert a new event with status='active'. Returns the new row's id.
+
+    Used by detection/monitor_trash.py (a manual, one-off script -- see its
+    own docstring) as the only real, non-seed caller so far. Position/
+    tracking state that decides *when* to call this lives in that script's
+    own memory, not in this table -- see Knowledge/05 - Events & Evidence/
+    Event Model.md for why no bbox/frame linkage is stored here.
+    """
+    occurred_at = occurred_at or datetime.now().isoformat(timespec="seconds")
+    with connection() as conn:
+        cur = conn.execute(
+            """
+            INSERT INTO events
+                (category, title, description, occurred_at, video_available, snapshot_available, evidence_note, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+            """,
+            (category, title, description, occurred_at, video_available, snapshot_available, evidence_note),
+        )
+        return cur.lastrowid
+
+
+def resolve_event(event_id: int):
+    """Mark one event resolved (e.g. the tracked item is no longer detected)."""
+    with connection() as conn:
+        conn.execute("UPDATE events SET status = 'resolved' WHERE id = ?", (event_id,))
+
+
+def list_active_events(category: str = None):
+    """Active (unresolved) events, newest first. Used by monitor_trash.py to
+    rebuild its in-memory tracked-location state on startup, not by the web
+    UI (which reads events via app.py's own /api/events query)."""
+    with connection() as conn:
+        if category:
+            return conn.execute(
+                "SELECT * FROM events WHERE status = 'active' AND category = ? ORDER BY occurred_at DESC",
+                (category,),
+            ).fetchall()
+        return conn.execute(
+            "SELECT * FROM events WHERE status = 'active' ORDER BY occurred_at DESC"
+        ).fetchall()
 
 
 # ------------------------------------------------------------- head counts

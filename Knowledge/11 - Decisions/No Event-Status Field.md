@@ -1,9 +1,15 @@
 # No Event-Status Field
 
 ## Status
-Working Decision
+**Superseded (2026-09-26)** — see [[Trash Monitoring Integration]]. The
+`events` table now has a `status` column (`active`/`resolved`), added with
+explicit user confirmation specifically to support
+`detection/monitor_trash.py`'s real detection lifecycle. This note is kept
+for history — the reasoning below (why a status field was originally
+omitted) is still accurate background on the *original* decision, just no
+longer the current state of the schema/UI.
 
-## Decision
+## Decision (historical, no longer current — see Status above)
 The event data model and the admin UI intentionally omit an event-status field (e.g. New / Reviewed / Resolved). No status tracking exists in the `events` table or the UI. (A separate `desktop-app/` prototype also omitted it before it was removed — see [[Web Application as Sole Admin UI]].)
 
 ## Reason
@@ -17,8 +23,10 @@ Possibly — `admin-ui/CLAUDE.md` explicitly instructs "don't add one without ch
 
 ## Change Trigger
 Explicit confirmation from the user before adding any event-status field.
+**Fulfilled 2026-09-26** — see [[Trash Monitoring Integration]].
 
 ## Related
 - [[Event Model]]
 - [[UI Requirements]]
 - [[12 - Open Questions]]
+- [[Trash Monitoring Integration]]

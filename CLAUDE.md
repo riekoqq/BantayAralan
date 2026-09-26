@@ -24,11 +24,16 @@ restate the knowledge base.
   Requirements, design, and technical decisions may change after adviser
   consultation. Never treat a proposal statement as final, or as evidence
   that it's implemented.
-- Only one subsystem has actual source code: [`admin-ui/`](admin-ui/) (Flask
-  + vanilla JS web app, mock data) — the sole and primary BantayAralan admin
-  UI. It has no camera, no model, and no connection to any detection
-  backend — it consumes mock SQLite data it generates itself. See its own
-  `CLAUDE.md`.
+- Two subsystems have actual source code: [`admin-ui/`](admin-ui/) (Flask
+  + vanilla JS web app) — the sole and primary BantayAralan admin UI, mostly
+  mock SQLite data it generates itself — and, as of 2026-09-26,
+  [`detection/`](detection/), whose `monitor_trash.py` is a one-off script
+  that runs a trained model against a live camera and writes real `trash`
+  events into `admin-ui`'s database (see
+  [Knowledge/11 - Decisions/Trash Monitoring Integration.md](<Knowledge/11%20-%20Decisions/Trash%20Monitoring%20Integration.md>)).
+  When that script isn't running, `admin-ui` behaves exactly as before —
+  no camera, no model, no automatic detection connection. See each
+  subsystem's own `CLAUDE.md`.
   A separate native desktop prototype (`desktop-app/`, PySide6) previously
   existed and was briefly the documented "primary" UI; it was **removed on
   2026-09-23** once the finalized prototype paper settled the direction as
@@ -41,13 +46,15 @@ restate the knowledge base.
   it no longer exists in the working tree.
 - [`anti-ai-slop/`](anti-ai-slop/) is a separate third-party tool (its own
   git repo), not BantayAralan code — never edit it as part of this project.
-- The CV pipeline (YOLOv8, ByteTrack, camera capture — see
+- The CV pipeline described in the proposal (YOLOv8, ByteTrack, camera
+  capture — see
   [Knowledge/04 - Computer Vision.md](<Knowledge/04%20-%20Computer%20Vision.md>)
-  for the model-version correction) described in the proposal has **no
-  source code anywhere in this repo**. [`detection/`](detection/) holds
-  only dataset/labeling tracking docs for an in-progress no-code
-  proof-of-concept (see its own `CLAUDE.md`) — not runnable training or
-  inference code.
+  for the model-version correction) is **mostly** still not implemented:
+  [`detection/`](detection/) holds dataset/labeling tracking for an
+  in-progress no-code proof-of-concept, plus one real script,
+  `monitor_trash.py` (live camera → trained model → real events in
+  `admin-ui`'s database). That script's own position-tracking is a simple
+  in-memory nearest-match, **not** ByteTrack — see `detection/CLAUDE.md`.
 
 When more source code is added, update this file, the relevant `Knowledge/`
 notes, and add a scoped subsystem `CLAUDE.md` — don't let any of them go

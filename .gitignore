@@ -10,6 +10,9 @@ anti-ai-slop/
 # master doc, feasibility study) — kept locally, not tracked in git
 documents/
 
+# root-level dataset photos — kept locally only, same as detection/dataset/
+dataset/
+
 # detection/ dataset tracking — never commit raw/labeled images, exports, or weights
 detection/dataset/images/
 detection/dataset/exports/

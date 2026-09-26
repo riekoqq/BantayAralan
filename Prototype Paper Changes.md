@@ -1,12 +1,16 @@
 # Prototype Paper Changes
 
-This document tracks how [`BantayAralan-Prototype-Paper.docx`](BantayAralan-Prototype-Paper.docx) /
-[`.pdf`](BantayAralan-Prototype-Paper.pdf) revises
-[`Team8_BantayAralan-Proposal.docx.pdf`](Team8_BantayAralan-Proposal.docx.pdf) (the original
+This document tracks how [`BantayAralan-Prototype-Paper.docx`](documents/BantayAralan-Prototype-Paper.docx) /
+[`.pdf`](documents/BantayAralan-Prototype-Paper.pdf) revises
+[`Team8_BantayAralan-Proposal.docx.pdf`](documents/Team8_BantayAralan-Proposal.docx.pdf) (the original
 proposal, dated March 29, 2026, which remains unchanged and remains the proposal of
 record). The prototype paper is a separate working draft, not yet reviewed by the
 thesis adviser, and does not report any implementation results, test data, or survey
 findings, because none of the features it describes have been built or evaluated.
+
+> **Note:** the files linked above live in `documents/` (git-ignored, kept
+> locally only — see the root `.gitignore`). This tracking file itself
+> stays in the repository root as project context.
 
 Status labels follow [`.claude/rules/proposal-vs-implementation.md`](.claude/rules/proposal-vs-implementation.md):
 Implemented / Partially implemented / Planned / Proposal requirement / Under

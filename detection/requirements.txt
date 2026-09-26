@@ -1,0 +1,23 @@
+# Python packages needed to run detection/monitor_trash.py and
+# detection/live_view.py (real inference scripts) -- NOT needed for
+# admin-ui alone, which only needs admin-ui/requirements.txt.
+#
+# GPU (CUDA) support for torch is NOT handled by a plain
+# `pip install -r requirements.txt` -- PyPI's default torch wheel is
+# CPU-only (or may not match your CUDA version). If you have an NVIDIA
+# GPU, install torch/torchvision FIRST with the matching CUDA build, e.g.
+# (check https://pytorch.org/get-started/locally/ for the current command
+# for your CUDA version):
+#
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+#
+# Then install everything else below. Without a GPU, skip that step --
+# ultralytics will install a CPU-only torch automatically and inference
+# will just be slower (still correct, not broken).
+
+ultralytics>=8.4      # pulls in opencv-python, numpy, torch (if not already installed), etc.
+
+# Training itself (yolo detect train ...) uses the same `ultralytics`
+# package -- no separate install needed. See detection/dataset/README.md
+# for the actual training/labeling workflow (Roboflow export -> local
+# `yolo detect train`), not covered by this file.

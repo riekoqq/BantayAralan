@@ -4,8 +4,30 @@ Status: **Partially implemented**. Dataset/training work is still a
 proof-of-concept (see the round log), but real inference code now exists:
 [`monitor_trash.py`](monitor_trash.py) runs a trained model against a live
 camera (or video file) and writes real `trash` events into admin-ui's
-database. See root [`CLAUDE.md`](../CLAUDE.md) for the project-wide
-working-draft/status-label rules; this file assumes you've read those.
+database, and [`live_view.py`](live_view.py) is a standalone real-time
+viewer independent of admin-ui. See root [`CLAUDE.md`](../CLAUDE.md) for
+the project-wide working-draft/status-label rules; this file assumes
+you've read those.
+
+## Setup
+
+```bash
+pip install -r detection/requirements.txt
+```
+See that file's comments for GPU (CUDA) torch install notes — a plain
+`pip install` gets you a working CPU-only setup, but you want the CUDA
+build first if you have an NVIDIA GPU (see `detection/requirements.txt`).
+This is separate from `admin-ui/requirements.txt` — installing one doesn't
+install the other; you need both if you're running `monitor_trash.py`
+alongside the web app.
+
+Also needs a trained model's `.pt` weights and, if you want to
+retrain/relabel, the labeled dataset itself — **neither is in git**
+(`*.pt` and the dataset image folders are gitignored on purpose, see
+`.gitignore`). A fresh clone of this repo has no trained model and no
+training data; both have to be transferred separately (not via git) from
+wherever they were trained, or retrained from scratch via a new Roboflow
+export — see `dataset/README.md`.
 
 ## What actually exists here
 
@@ -15,8 +37,25 @@ working-draft/status-label rules; this file assumes you've read those.
   you've unzipped a Roboflow export here.
 - `runs/` (gitignored) — local training output (`yolo detect train`) and
   ad-hoc camera-test recordings/analysis.
-- [`monitor_trash.py`](monitor_trash.py) — the one real piece of inference
-  code in this repo. See its own docstring for full detail; summary below.
+- [`monitor_trash.py`](monitor_trash.py) — runs a trained model against a
+  live camera and writes real `trash` events into admin-ui's database
+  (dedup/resolve lifecycle). See its own docstring for full detail;
+  summary below.
+- [`live_view.py`](live_view.py) — standalone real-time viewer, no
+  database, no admin-ui dependency at all. Opens an OpenCV window showing
+  every class the model detects, live, with an FPS counter. Deliberately
+  **not** a GUI application (no Tkinter/PyQt) — the proposal leaves "which
+  GUI framework for the integrated CV + GUI system" as an explicit open
+  question ([12 - Open Questions.md](<../Knowledge/12%20-%20Open%20Questions.md>));
+  a plain `cv2.imshow` window sidesteps that decision rather than silently
+  answering it. **Must be run in a terminal with a real display attached**
+  — `cv2.imshow` opens a native window and won't work headless/remote:
+  ```bash
+  python detection/live_view.py \
+      --model detection/runs/train2/weights/best.pt \
+      --source "rtsp://user:pass@<camera-ip>:554/stream1"
+  ```
+  Press `q` in the window to quit.
 
 ## monitor_trash.py
 

@@ -119,6 +119,16 @@ python run_web.py       # browser tab, http://127.0.0.1:5057
 python run_desktop.py   # the same web app in a native window, needs `pip install pywebview`
 ```
 
-There is no build/run/test tooling for the CV detection pipeline (YOLO/ByteTrack/
-camera capture) — that part of the proposal has no source code yet. Do not fabricate
-commands for it.
+For `detection/`'s real scripts (`monitor_trash.py`, `live_view.py` — see
+[detection/CLAUDE.md](detection/CLAUDE.md)):
+
+```bash
+pip install -r detection/requirements.txt
+```
+Needs a trained model's `.pt` weights and, for retraining, the labeled
+dataset — neither is in git (see `detection/CLAUDE.md`'s Setup section);
+both must be transferred separately or retrained from a fresh Roboflow
+export. Beyond this install step, there is no build/run/test tooling for
+the rest of the proposal's CV pipeline (ByteTrack, the two-camera setup,
+behavior/pose detection) — that part has no source code yet. Do not
+fabricate commands for it.

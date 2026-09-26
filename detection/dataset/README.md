@@ -243,3 +243,45 @@ person crouching, bending, or sitting near the floor and *no* trash
 present, so the model gets a direct signal that human bodies/clothing in
 that zone aren't clutter — not just more generic "clean floor" negatives,
 which don't cover this specific confusion.
+
+### Model size experiment — 2026-09-26 (yolov8n vs. yolov8s, same round 2 data)
+
+Trained `yolov8s.pt` on the identical round 2 dataset/hyperparameters as
+`train2` (`yolov8n`), to test whether a bigger model helps on this data —
+prompted by a question about whether more training data would slow down
+live inference (it doesn't; model variant does, addressed separately) and
+then whether a bigger variant would just be more accurate on the same
+data (tested here rather than assumed).
+
+**Validation numbers were mixed and not very meaningful**: `yolov8s` had
+higher precision/recall and `trash` mAP50 (0.608 vs 0.474), but lower
+`misaligned` mAP50 (0.495 vs 0.662) and roughly flat overall mAP50 — on a
+2-image, 10-instance validation set, none of these differences are
+statistically meaningful in either direction.
+
+**Live camera testing was more informative, though confounded**: this
+happened to run at night, which put the camera into IR/grayscale mode —
+something **zero training images cover** (all 23 are daytime/color), so
+this tests an unseen visual domain on top of everything else. Result: widespread,
+low-confidence (0.11-0.27), scattered false positives across the frame
+with `yolov8s` (confirmed via a saved frame — not just numbers), and the
+user separately observed a new false positive during live viewing (via
+`live_view.py`) that `yolov8n` had never shown: the bed's wooden legs
+flagged as `trash`.
+
+**Conclusion so far**: no evidence found that `yolov8s` earns its ~3x
+parameter count on this dataset size — some evidence (the new bed-leg
+false positive, the `misaligned` mAP50 drop) that it's overfitting more,
+not less. **Decision deliberately deferred, not closed**: the user wants
+to expand the dataset (round 3) before picking a model size, rather than
+decide on today's small/confounded comparison. **Both trained weight sets
+are being kept** (`detection/runs/train2/weights/` = `yolov8n`,
+`detection/runs/train_s/weights/` = `yolov8s`, both gitignored/local-only)
+so both can be re-compared once round 3's data exists, instead of
+re-training `yolov8s` from scratch later. Separately, this experiment
+surfaced a real finding worth acting on regardless of model choice, not
+confounded by the night-mode issue: **the dataset has zero night/IR
+examples**, and behavior after dark is currently unvalidated and likely
+unreliable. Relevant only if the actual deployment scenario includes
+low-light conditions — worth a deliberate decision either way, not a
+silent gap.

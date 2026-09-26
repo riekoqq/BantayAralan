@@ -190,7 +190,64 @@ for the full reasoning, including why this reverses the earlier
 [No Event-Status Field](<../Knowledge/11 - Decisions/No Event-Status Field.md>)
 decision rather than working around it.
 
-## Architecture
+## Mobile layout & live clock
+
+Added 2026-09-27, driven entirely by the user screenshotting specific
+things that looked wrong at narrow widths — see this session's notes
+(`session-notes/2026-09-27-admin-ui-responsive-fixes.md`) for the full
+iteration history if a future change here looks like it's undoing a past
+one for no reason; several of these went through 2-3 wrong shapes first.
+
+- **`#mobile-status`** (`renderStatusBox()` in `app.js`, `.mobile-status`
+  in `styles.css`) — a mobile-only duplicate of the sidebar's
+  `#system-status` box, rendered from the same generated HTML string
+  (`statusBoxHtml()`) into both targets. Exists because `.sidebar` is
+  `display:none` below 900px, which was silently swallowing the Detection
+  on/off toggle entirely on mobile — not just a status readout, a real
+  control with no other access point. Layout: the toggle sits alone on
+  its own top row, everything else (camera/monitoring/last-event/
+  head-count) below it as a left-aligned 2-column CSS grid
+  (`.status-rest`, `grid-template-columns: repeat(2, auto)`). Both
+  `#system-status` and `#mobile-status` share one click handler per
+  render — if you ever make either element persistent across renders
+  instead of rebuilt via `innerHTML`, use `.onclick =` not
+  `addEventListener` (see the theme-toggle gotcha below for why).
+- **Mobile topbar toggle bug (fixed, worth remembering)**: `#theme-toggle-
+  mobile` used to live inside `.mobile-nav`'s `innerHTML`, rebuilt fresh
+  every `renderSidebar()` call. It's now a static button in `index.html`
+  (so it can sit in its own top row next to the wordmark instead of
+  wrapping inside the nav links). Because it's no longer destroyed/
+  recreated each render, wiring its click with `addEventListener` inside
+  `renderSidebar()` (which runs on every navigation) stacked a new
+  duplicate listener on every route change, so clicking it fired
+  `Theme.toggle()` multiple times per click. Fixed with `.onclick =`
+  (replaces the handler instead of stacking). The desktop `#theme-toggle`
+  doesn't have this problem since the whole `#sidebar` is torn down and
+  rebuilt via `innerHTML` every render.
+- **Live clock** (`updateClocks()` in `app.js`, ticks every second via one
+  `setInterval` started once in the `DOMContentLoaded` handler — not
+  per-render). Two independent DOM targets: `#corner-clock`, a
+  `position: fixed; top; right;` element anchored to the actual viewport
+  corner (desktop only, hidden below 900px) — deliberately *not* placed
+  inside the sidebar, since anything inside that left column reads as
+  top-*left* of the screen even if it's top-right of the column itself;
+  and `#live-clock-mobile`, inline next to the mobile topbar's dark-mode
+  toggle (already correctly top-right there since that bar spans full
+  width).
+- **Events & Logs row responsiveness** (`.event-row` in `styles.css`) —
+  `flex-wrap: wrap` is on unconditionally (not just below 900px), and
+  `.row-desc` has a real `min-width: 220px` floor instead of `min-width:
+  0`. Do not remove either: without `flex-wrap`, the row's fixed-width
+  columns (badge 150px + status 92px + date 140px + time 80px + evidence
+  210px ≈ 672px) exceed the available row width on any window narrower
+  than roughly 1150-1200px including the sidebar, and without the
+  `min-width` floor, `.row-desc` (which has `flex:1`) absorbs that entire
+  deficit and gets crushed to a sliver — this was happening silently for
+  a while, masked by `.sub`'s old `text-overflow: ellipsis`, until
+  measuring `scrollWidth` vs `clientWidth` directly exposed it. `.sub`
+  (the description) no longer truncates at all — it wraps across
+  multiple lines instead, at every width.
+
 
 - **Backend**: `backend/app.py` — a small Flask app. `create_app()` wires
   routes and calls `init_db()` + `seed()` on startup (idempotent — `seed()`
@@ -285,6 +342,15 @@ under a `[data-theme="dark"]` block for Dark Mode — see above.
   `data/bantayaralan.db` — `seed()` only populates an empty table.
 - Evidence-unavailable rows are intentional (~10% of seeded events per
   `EVIDENCE_WEIGHTS`) — not a bug if you see "Evidence Unavailable" tags.
+- **After editing `styles.css`/`app.js`, a hash navigation (`#/events`
+  etc.) will NOT pick up the change** — this is a single-page app with
+  client-side hash routing, so changing the URL hash never triggers a full
+  page reload/re-fetch of the stylesheets or scripts, only the in-page
+  `route()` re-render. If a CSS/JS edit doesn't seem to apply, navigate to
+  the bare origin (`/`) first (a real reload) before re-testing, not just
+  a new `#/...` hash — cost real back-and-forth more than once this
+  session before being caught via a direct `fetch('/css/styles.css')`
+  diff against the file on disk.
 
 ## Commands
 

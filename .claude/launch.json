@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "admin-ui-web",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-c", "import sys; sys.path.insert(0, 'admin-ui'); from backend.app import create_app; create_app().run(port=5057)"],
+      "runtimeExecutable": "admin-ui/.venv/Scripts/python.exe",
+      "runtimeArgs": ["admin-ui/run_web.py"],
       "port": 5057
     }
   ]

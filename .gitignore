@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 *.db
 .DS_Store
+.venv/
 
 anti-ai-slop/
 .claude/scheduled_tasks.lock

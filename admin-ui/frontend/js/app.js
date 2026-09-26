@@ -70,15 +70,24 @@ function renderSidebar() {
     <a class="${active === "events" ? "active" : ""}" href="#/events">Events</a>
     <a class="${active === "headcount" ? "active" : ""}" href="#/headcount">Head Count</a>
     <a class="${active === "insights" ? "active" : ""}" href="#/insights">Insights</a>
-    <button class="theme-toggle" id="theme-toggle-mobile" aria-label="Toggle dark mode" title="Toggle dark mode">
-      ${iconHtml(theme === "dark" ? "moon" : "sun", "var(--text-secondary)", 16)}
-    </button>
   `;
+  document.getElementById("theme-toggle-mobile").innerHTML = iconHtml(theme === "dark" ? "moon" : "sun", "var(--text-secondary)", 16);
 
   document.getElementById("theme-toggle")?.addEventListener("click", () => { Theme.toggle(); renderSidebar(); });
-  document.getElementById("theme-toggle-mobile")?.addEventListener("click", () => { Theme.toggle(); renderSidebar(); });
+  document.getElementById("theme-toggle-mobile").onclick = () => { Theme.toggle(); renderSidebar(); };
 
   renderStatusBox();
+  updateClocks();
+}
+
+const CLOCK_IDS = ["corner-clock", "live-clock-mobile"];
+
+function updateClocks() {
+  const text = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
+  CLOCK_IDS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  });
 }
 
 function summarizeHeadcountSchedule(schedule) {
@@ -90,36 +99,51 @@ function summarizeHeadcountSchedule(schedule) {
   return `Waiting for ${pending.label} (${pending.scheduled_time})`;
 }
 
-function renderStatusBox() {
-  const el = document.getElementById("system-status");
-  if (!el) return;
-  Promise.all([Api.status(), Api.headcountSchedule()]).then(([s, schedule]) => {
-    if (!document.getElementById("system-status")) return;
-    el.innerHTML = `
+const STATUS_BOX_IDS = ["system-status", "mobile-status"];
+
+function statusBoxHtml(s, schedule) {
+  return `
+    <div class="status-line detection-toggle-line">
+      <button class="toggle-switch detection-toggle ${s.detection_enabled ? "on" : ""}" role="switch" aria-checked="${s.detection_enabled}" aria-label="Toggle detection">
+        <span class="toggle-thumb"></span>
+      </button>
+      <span>Detection: ${s.detection_enabled ? "Enabled" : "Disabled"}</span>
+    </div>
+    <div class="status-rest">
       <div class="status-line"><span class="status-dot ${s.camera_connected ? "" : "warn"}"></span> Camera: ${s.camera_connected ? "Connected" : "Disconnected"}</div>
       <div class="status-line"><span class="status-dot ${s.monitoring_active ? "" : "warn"}"></span> Monitoring: ${s.monitoring_active ? "Active" : "Inactive"}</div>
-      <div class="status-line detection-toggle-line">
-        <button class="toggle-switch ${s.detection_enabled ? "on" : ""}" id="detection-toggle" role="switch" aria-checked="${s.detection_enabled}" aria-label="Toggle detection">
-          <span class="toggle-thumb"></span>
-        </button>
-        <span>Detection: ${s.detection_enabled ? "Enabled" : "Disabled"}</span>
-      </div>
       <div class="status-line"><span class="status-dot"></span> Last event: ${s.last_event_at ? "recorded" : "none yet"}</div>
       <div class="status-line"><span class="status-dot"></span> ${summarizeHeadcountSchedule(schedule)}</div>
       <p class="status-note">Cameras and head counting keep running either way.</p>
-    `;
-    document.getElementById("detection-toggle")?.addEventListener("click", async (e) => {
-      const btn = e.currentTarget;
-      btn.disabled = true;
-      try {
-        await Api.setDetectionState(!s.detection_enabled);
-        renderStatusBox();
-      } catch (err) {
-        btn.disabled = false;
-      }
+    </div>
+  `;
+}
+
+function renderStatusBox() {
+  const targets = STATUS_BOX_IDS.map((id) => document.getElementById(id)).filter(Boolean);
+  if (!targets.length) return;
+  Promise.all([Api.status(), Api.headcountSchedule()]).then(([s, schedule]) => {
+    const html = statusBoxHtml(s, schedule);
+    STATUS_BOX_IDS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = html;
+      el.querySelector(".detection-toggle")?.addEventListener("click", async (e) => {
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        try {
+          await Api.setDetectionState(!s.detection_enabled);
+          renderStatusBox();
+        } catch (err) {
+          btn.disabled = false;
+        }
+      });
     });
   }).catch(() => {
-    if (el) el.innerHTML = `<div class="status-line"><span class="status-dot warn"></span> Status unavailable</div>`;
+    STATUS_BOX_IDS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `<div class="status-line"><span class="status-dot warn"></span> Status unavailable</div>`;
+    });
   });
 }
 
@@ -158,4 +182,5 @@ window.addEventListener("hashchange", route);
 window.addEventListener("DOMContentLoaded", () => {
   if (!window.location.hash) window.location.hash = "#/dashboard";
   route();
+  setInterval(updateClocks, 1000);
 });

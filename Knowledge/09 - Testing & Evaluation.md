@@ -29,6 +29,20 @@ overrides the scheduler's clock, letting each of the three startup cases
 exercised in seconds. Never set in production — see `admin-ui/CLAUDE.md` →
 "Testing the scheduler" for the exact commands.
 
+**CV model testing** is separate from the above and tracked in
+`detection/dataset/README.md`'s round log, not here — each training
+round's validation numbers plus, where done, a follow-up live-camera
+check, either visual-only (`detection/live_view.py`, no database writes)
+or end-to-end (`detection/monitor.py --show`, writes real events into
+`admin-ui`). The round log is explicit that validation numbers alone have
+repeatedly looked better than live testing confirmed: round 4's
+`standing`, mAP50 0.995 on paper, found live 2026-09-30 to not detect
+people other than the one in its training photos; a follow-up end-to-end
+test 2026-10-01 separately found `trash` misreading a cast shadow as
+clutter, a different false-positive mode than the person's-clothing
+confusion seen in every prior round — see [[04 - Computer Vision]] for
+the current status summary.
+
 A separate `desktop-app/` prototype was syntax-checked and launched
 successfully but never fully click-tested visually before it was removed
 2026-09-23 — see [[Web Application as Sole Admin UI]].

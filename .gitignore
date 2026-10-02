@@ -27,3 +27,14 @@ detection/dataset/*.zip
 
 # real captured event snapshots from detection/monitor_trash.py — local only
 admin-ui/data/snapshots/
+
+# scanned official forms with real signatures/handwriting — kept locally, not tracked in git
+AdviserForm.jpg
+Consultation003.jpg
+
+# additional deliverable documents at repo root — same treatment as documents/
+Team8_BantayAralan-ProposalPaper.docx
+Team8_Prior Art Search.docx
+
+# demo/screen recordings — kept locally, not tracked in git
+*.mp4

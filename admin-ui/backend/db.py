@@ -36,12 +36,17 @@ CREATE TABLE IF NOT EXISTS head_counts (
     source TEXT NOT NULL DEFAULT 'scheduled' CHECK (source IN ('manual', 'scheduled'))
 );
 
--- Single persisted row: whether detection/event-generation is enabled.
--- Gates event generation only -- cameras, monitoring, and head counting
--- are independent of this flag (see admin-ui/CLAUDE.md).
+-- Single persisted row: whether detection/event-generation is enabled,
+-- per category (trash, standing) -- separate toggles so disabling one
+-- doesn't gate the other. Gates event generation only -- cameras,
+-- monitoring, and head counting are independent of these flags (see
+-- admin-ui/CLAUDE.md). Only `trash` and `standing` have real detectors
+-- (see detection/monitor.py); `misaligned`/`other` have no toggle since
+-- nothing generates those automatically.
 CREATE TABLE IF NOT EXISTS detection_state (
     id INTEGER PRIMARY KEY CHECK (id = 1),
-    enabled INTEGER NOT NULL DEFAULT 1,
+    trash_enabled INTEGER NOT NULL DEFAULT 1,
+    standing_enabled INTEGER NOT NULL DEFAULT 1,
     updated_at TEXT NOT NULL
 );
 """
@@ -75,18 +80,37 @@ def connection():
 def init_db():
     with connection() as conn:
         conn.executescript(SCHEMA)
-    ensure_detection_state()
     _migrate_head_counts_source_column()
     _migrate_events_status_column()
+    _migrate_detection_state_columns()
+    ensure_detection_state()
 
 
 def ensure_detection_state():
-    """Make sure the single detection_state row exists, defaulting to enabled."""
+    """Make sure the single detection_state row exists, defaulting to both
+    categories enabled."""
     with connection() as conn:
         conn.execute(
-            "INSERT OR IGNORE INTO detection_state (id, enabled, updated_at) VALUES (1, 1, ?)",
+            "INSERT OR IGNORE INTO detection_state (id, trash_enabled, standing_enabled, updated_at) "
+            "VALUES (1, 1, 1, ?)",
             (datetime.now().isoformat(timespec="seconds"),),
         )
+
+
+def _migrate_detection_state_columns():
+    """Split the old single `enabled` column (pre-2026-10-01, one toggle for
+    every category) into `trash_enabled`/`standing_enabled`. Carries the old
+    combined value over to both new columns so a toggle that was off stays
+    off for both rather than silently re-enabling anything. The old `enabled`
+    column is left in place, unused -- dropping it isn't worth the risk for
+    a mock/demo database.
+    """
+    with connection() as conn:
+        cols = {row["name"] for row in conn.execute("PRAGMA table_info(detection_state)")}
+        if "enabled" in cols and "trash_enabled" not in cols:
+            conn.execute("ALTER TABLE detection_state ADD COLUMN trash_enabled INTEGER NOT NULL DEFAULT 1")
+            conn.execute("ALTER TABLE detection_state ADD COLUMN standing_enabled INTEGER NOT NULL DEFAULT 1")
+            conn.execute("UPDATE detection_state SET trash_enabled = enabled, standing_enabled = enabled")
 
 
 def _migrate_head_counts_source_column():
@@ -120,6 +144,35 @@ def is_seeded() -> bool:
     with connection() as conn:
         row = conn.execute("SELECT COUNT(*) AS n FROM events").fetchone()
         return row["n"] > 0
+
+
+_DETECTION_STATE_COLUMNS = {"trash": "trash_enabled", "standing": "standing_enabled"}
+
+
+def is_category_detection_enabled(category: str) -> bool:
+    """Read the sidebar/mobile per-category Detection toggle's current
+    value. Used by detection/monitor.py and monitor_trash.py to decide
+    whether to open new events -- see those scripts' callers for why this
+    only gates *new* events, not already-tracked ones being resolved.
+    Categories with no toggle of their own (misaligned, other -- nothing
+    generates those automatically) always read as enabled."""
+    column = _DETECTION_STATE_COLUMNS.get(category)
+    if column is None:
+        return True
+    with connection() as conn:
+        row = conn.execute(f"SELECT {column} FROM detection_state WHERE id = 1").fetchone()
+        return bool(row[column]) if row else True
+
+
+def set_category_detection_enabled(category: str, enabled: bool) -> None:
+    column = _DETECTION_STATE_COLUMNS.get(category)
+    if column is None:
+        raise ValueError(f"no detection toggle for category: {category!r}")
+    with connection() as conn:
+        conn.execute(
+            f"UPDATE detection_state SET {column} = ?, updated_at = ? WHERE id = 1",
+            (1 if enabled else 0, datetime.now().isoformat(timespec="seconds")),
+        )
 
 
 # ------------------------------------------------------------------ events

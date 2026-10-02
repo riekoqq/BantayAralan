@@ -38,8 +38,10 @@ def main():
     parser.add_argument("--source", required=True, help="RTSP URL or video file path")
     parser.add_argument("--conf", type=float, default=0.3)
     parser.add_argument("--iou", type=float, default=0.5)
-    parser.add_argument("--display-width", type=int, default=1024,
-                         help="Window width in pixels -- the camera's native resolution (e.g. 2304x1296) is too large for most screens, so the displayed frame is downscaled to this width (aspect ratio kept). Does not affect detection, which still runs on the full-resolution frame.")
+    parser.add_argument("--display-width", type=int, default=1600,
+                         help="Window width in pixels -- the camera's native resolution (e.g. 2304x1296) is too large for most screens, so the displayed frame is resized to display-width x display-height. Does not affect detection, which still runs on the full-resolution frame.")
+    parser.add_argument("--display-height", type=int, default=900,
+                         help="Window height in pixels (default 1600x900, 16:9 -- matches this camera's native aspect ratio exactly, so no letterboxing/stretching).")
     args = parser.parse_args()
 
     model = YOLO(args.model)
@@ -52,10 +54,7 @@ def main():
         for result in stream:
             frame = result.plot()  # full-resolution frame with boxes/labels/confidences drawn
 
-            h, w = frame.shape[:2]
-            if w > args.display_width:
-                scale = args.display_width / w
-                frame = cv2.resize(frame, (args.display_width, int(h * scale)))
+            frame = cv2.resize(frame, (args.display_width, args.display_height))
 
             now = time.time()
             fps = 1.0 / max(now - prev_time, 1e-6)

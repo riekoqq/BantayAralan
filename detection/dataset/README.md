@@ -16,8 +16,14 @@ only labeled `trash` if it's on the floor. Clutter sitting on a desk/bed/
 chair should be left **unlabeled** (not boxed) rather than counted as
 `trash` — that's what teaches the model "floor" specifically rather than
 "clutter anywhere," and doubles as a useful negative example (visually
-messy-looking, correctly zero boxes). Round 2 is `trash`-only —
-`misaligned` labeling is deliberately deferred, not abandoned.
+messy-looking, correctly zero boxes).
+
+**`misaligned` deprioritized for the near-term prototype (2026-09-29)** —
+see [Knowledge/11 - Decisions/Prototype Scope — Trash and Standing, Misaligned Deprioritized.md](<../../Knowledge/11%20-%20Decisions/Prototype%20Scope%20—%20Trash%20and%20Standing%2C%20Misaligned%20Deprioritized.md>).
+No further `misaligned` labeling effort for now — active work is `trash`
+plus a new `standing` category (pose-estimation based, separate from this
+dataset entirely — see [[04 - Computer Vision]]). Existing `misaligned`
+labels/results stay as historical record, not deleted.
 
 **No "not trash" / "not misaligned" tag** — detection labeling only marks
 the positive things you want found; unlabeled regions/images are implicitly
@@ -285,3 +291,148 @@ examples**, and behavior after dark is currently unvalidated and likely
 unreliable. Relevant only if the actual deployment scenario includes
 low-light conditions — worth a deliberate decision either way, not a
 silent gap.
+
+### Round 3 — 2026-09-28 (undocumented at the time)
+
+`detection/runs/train3/weights/best.pt` and
+`detection/dataset/BantayAralan.v3i.yolov8.zip` both exist (trained
+2026-09-28) but no round-log entry was written for this round when it
+happened — found as a gap on 2026-09-30 while setting up round 4 below.
+Not backfilled here since the source dataset composition wasn't recorded
+at the time and shouldn't be guessed. If this round's numbers/dataset
+composition still matter, re-derive them from the v3 zip before relying
+on `train3`'s weights for anything beyond what's already been informally
+tested live.
+
+### Round 4 — 2026-09-30
+
+- **Source images**: 47 total (43 train / 2 valid / 2 test) — up from
+  round 2's 23. Roboflow project version 4
+  (`justins-workspace-banrr/bantayaralan`, dataset version 4).
+- **Class split — architecture change**: this export's `data.yaml` is
+  `nc: 2, names: ['standing', 'trash']`. **`standing` is now a directly
+  labeled bounding-box class in this same Roboflow project**, not the
+  pose-estimation + head-height heuristic described elsewhere
+  (`detection/CLAUDE.md`, [[04 - Computer Vision]], and `monitor.py`'s
+  history) — that heuristic was removed from `monitor.py` on 2026-09-30
+  for being unreliable (see git history), with the stated plan being to
+  train `standing` "the same way `trash` was" once labeled data existed.
+  This round is that data. **`misaligned` is absent from this export**
+  (consistent with the 2026-09-29 deprioritization decision) — the two-
+  class taxonomy at the top of this file predates this round and still
+  needs updating/reconciling with the code's own docs; flagged, not
+  silently fixed.
+  - `standing`: 21 train / 6 valid / 6 test boxes (33 total).
+  - `trash`: 62 train / 7 valid / 7 test boxes (76 total).
+  - 10 of the 43 train images are negative/background (no boxes); valid
+    and test have none (same gap noted in round 2).
+- **Train/valid/test split**: 43 / 2 / 2 images — valid/test are still
+  very small (14 total instances), so treat metrics below as directional,
+  not a reliable number, same caveat as every prior round.
+- **Model**: local RTX 2060, `yolov8n.pt` transfer learning, `yolo detect
+  train data=detection/dataset/data.yaml model=yolov8n.pt epochs=150
+  patience=30 imgsz=640 batch=8 device=0 cache=True`. Ran the full 150
+  epochs (never triggered the `patience=30` early stop).
+- **Result** (validated on the 2-image valid split, 14 instances):
+  overall precision 0.835, recall 0.75, mAP50 0.805, mAP50-95 0.638. Per
+  class: `standing` P 0.973 / R 1.0 / mAP50 0.995 / mAP50-95 0.896;
+  `trash` P 0.697 / R 0.5 / mAP50 0.615 / mAP50-95 0.38. `trash`'s mAP50
+  improved over round 2 (0.474 → 0.615); `standing`'s numbers are the
+  first that exist for it as a trained class at all. **Not citable as
+  validated accuracy** — 2-image validation set, same as every round so
+  far; needs live-camera confirmation before trusting either class,
+  especially `standing` given how thin 33 boxes is.
+- **Weights**: `detection/runs/train4/weights/best.pt` (local only, not
+  committed).
+- **Roboflow project link**: `justins-workspace-banrr/bantayaralan`
+  (dataset version 4).
+
+**Next round should**: get live-camera confirmation for `standing`
+specifically (round 2's floor-clutter/person-confusion false positives
+were only caught this way, not from validation numbers) before treating
+it as more reliable than the discarded pose heuristic; keep growing both
+classes past 47 total; and decide whether/how to reconcile `monitor.py`,
+`detection/CLAUDE.md`, and the `standing` class-taxonomy section above
+with this round's architecture change.
+
+### Live camera test — 2026-09-30 (round 4 model, via `live_view.py`)
+
+First live-camera look at `train4/weights/best.pt` (the round 4 combined
+`trash` + `standing` model), via `detection/live_view.py` — visual check
+only, no events written. User-reported findings, informal but consistent
+with the pattern already seen in earlier rounds:
+
+**`trash` still false-positives on the user's own shirt.** Same
+person-clothing-as-floor-clutter confusion documented in round 1 (neck/
+collar) and round 2 (t-shirt graphic print, live test 4) — persists into
+round 4 despite the larger dataset. Consistent with round 2's own
+diagnosis: the dataset has never included a deliberate negative example
+of "a person near/at floor level, no clutter present," and round 4's 10
+background images don't appear to have closed that specific gap either.
+**Recommended fix, same as round 2 flagged and round 3/4 apparently
+didn't act on**: add negative examples with a person crouching/bending/
+sitting near the floor, not just generic clean-floor negatives.
+
+**`standing` degrades sharply from a side-on view.** Turning to a side
+profile (not facing the camera) drops detection noticeably compared to a
+front-facing pose. Only 33 `standing` boxes exist in round 4's training
+data (21 train), and there's no record of orientation variety being
+deliberately included — this reads as an underrepresented-pose gap, not
+a fundamental flaw the way the old pose-heuristic's furniture-elevation
+issue was.
+
+**`standing` does not detect other people at all — "probably because of
+height difference" (user's own assessment).** This is the more serious
+finding of the three: if true, the model may have learned to recognize
+one specific person's body proportions from a small, single-subject
+training set rather than a general standing posture. This is the same
+*kind* of failure as round 1's fixed-location `trash` overfitting and the
+`yolov8s` experiment's bed-leg false positive — a small dataset learning
+something narrower than the intended concept. **Needs deliberate
+follow-up**: test explicitly with multiple people of different heights/
+builds, and if confirmed, round 5 needs `standing` examples from more
+than one person before this class can be trusted at all, not just more
+examples generally.
+
+**Overall**: "good overall" per direct user feedback, and a real
+improvement over having no `standing` detection at all — but these three
+findings (especially the height/person-generalization one) mean round
+4's strong validation numbers (mAP50 0.995) should **not** be read as
+"standing detection works" yet. Same live-camera-over-validation-numbers
+lesson as every prior round.
+
+### Live camera test — 2026-10-01 (round 4 model, via `monitor.py --show`, recorded end-to-end)
+
+First test of `monitor.py` actually writing real events into admin-ui's
+database end-to-end (not just `live_view.py`'s visual-only check),
+recorded on video for a demo clip. Four real events logged (IDs 200-203):
+three `trash` events (confidence 0.59, 0.85, 0.57) and one `standing`
+event (confidence 0.51) — see `admin-ui/data/snapshots/200-203.jpg` for
+the actual saved evidence.
+
+**New false-positive mode found: a cast shadow read as `trash`.** Event
+#202 (confidence 0.57) was created the same second as #201 (confidence
+0.85, a real small object the user deliberately placed on the floor for
+this test) — but #202's box lands on a long shadow cast near the bed leg,
+not on any physical object at all (confirmed directly against its saved
+snapshot, `admin-ui/data/snapshots/202.jpg`). This is a **different**
+failure mode than the person's-clothing-as-trash pattern logged in every
+prior round (round 1 neck/collar, round 2 shirt graphic, round 4 shirt
+again, per the live-camera-test entry above) — not a body part or
+clothing being misread, but a shadow with no physical substance
+whatsoever. Same root-cause category though: the dataset has never
+included a deliberate negative example of "a shadow on the floor, no
+clutter present," same gap as the still-unaddressed "person near the
+floor, no clutter present" negative recommended back in round 2.
+
+**Confirmed real, by direct comparison**: event #201 (confidence 0.85) —
+same moment, same lighting, same floor area — is a genuine detection of
+an object actually placed there, confirmed against its own snapshot.
+Side-by-side, #201 and #202 make the shadow failure mode unambiguous
+rather than a guess from a single frame.
+
+**Recommended fix, same pattern as the clothing false positive**: round
+5's negative examples should include a clean floor **with a visible cast
+shadow on it** (from a person or furniture), not just a clean floor in
+flat lighting, so the model gets a direct signal that shadows aren't
+clutter either.

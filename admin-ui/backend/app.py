@@ -10,8 +10,9 @@ from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory, send_file, Response
 
 from . import scheduler
-from .db import connection, init_db, CATEGORY_LABELS, DATA_DIR
-from .seed import seed
+from .db import connection, init_db, CATEGORY_LABELS, DATA_DIR, is_category_detection_enabled, set_category_detection_enabled
+
+DETECTION_TOGGLE_CATEGORIES = ("trash", "standing")
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 SNAPSHOTS_DIR = DATA_DIR / "snapshots"
@@ -27,7 +28,6 @@ CATEGORY_ICON_COLOR = {
 def create_app():
     app = Flask(__name__, static_folder=None)
     init_db()
-    seed()  # no-op if already seeded
     scheduler.start()  # no-op if already started; runs in its own daemon thread
 
     # ---------------------------------------------------------------- pages
@@ -70,17 +70,14 @@ def create_app():
             last = conn.execute(
                 "SELECT occurred_at FROM events ORDER BY occurred_at DESC LIMIT 1"
             ).fetchone()
-            detection_row = conn.execute(
-                "SELECT enabled FROM detection_state WHERE id = 1"
-            ).fetchone()
         # camera_connected/monitoring_active are mock-true -- there is no real
         # camera or pipeline yet. Cameras and continuous monitoring/processing
-        # are independent of the detection_enabled toggle, which only gates
-        # event generation -- see admin-ui/CLAUDE.md.
+        # are independent of the detection_enabled toggles, which only gate
+        # event generation, per category -- see admin-ui/CLAUDE.md.
         return jsonify({
             "camera_connected": True,
             "monitoring_active": True,
-            "detection_enabled": bool(detection_row["enabled"]) if detection_row else True,
+            "detection_enabled": {cat: is_category_detection_enabled(cat) for cat in DETECTION_TOGGLE_CATEGORIES},
             "database_ok": True,
             "last_event_at": last["occurred_at"] if last else None,
         })
@@ -88,22 +85,28 @@ def create_app():
     @app.get("/api/detection-state")
     def get_detection_state():
         with connection() as conn:
-            row = conn.execute("SELECT enabled, updated_at FROM detection_state WHERE id = 1").fetchone()
-        return jsonify({"enabled": bool(row["enabled"]), "updated_at": row["updated_at"]})
+            row = conn.execute("SELECT updated_at FROM detection_state WHERE id = 1").fetchone()
+        return jsonify({
+            "enabled": {cat: is_category_detection_enabled(cat) for cat in DETECTION_TOGGLE_CATEGORIES},
+            "updated_at": row["updated_at"] if row else None,
+        })
 
     @app.post("/api/detection-state")
     def set_detection_state():
         data = request.get_json(silent=True) or {}
+        category = data.get("category")
         enabled = data.get("enabled")
+        if category not in DETECTION_TOGGLE_CATEGORIES:
+            return jsonify({
+                "error": "invalid_input",
+                "message": f"category must be one of {DETECTION_TOGGLE_CATEGORIES}.",
+            }), 400
         if not isinstance(enabled, bool):
             return jsonify({"error": "invalid_input", "message": "enabled must be a boolean."}), 400
-        now = datetime.now().isoformat(timespec="seconds")
+        set_category_detection_enabled(category, enabled)
         with connection() as conn:
-            conn.execute(
-                "UPDATE detection_state SET enabled = ?, updated_at = ? WHERE id = 1",
-                (1 if enabled else 0, now),
-            )
-        return jsonify({"enabled": enabled, "updated_at": now})
+            updated_at = conn.execute("SELECT updated_at FROM detection_state WHERE id = 1").fetchone()["updated_at"]
+        return jsonify({"category": category, "enabled": enabled, "updated_at": updated_at})
 
     # ------------------------------------------------------------ head count
     @app.get("/api/headcounts")

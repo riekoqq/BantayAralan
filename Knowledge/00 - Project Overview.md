@@ -26,8 +26,8 @@ See [[Research Proposal]] for the full background, research questions, and signi
 | Admin UI — native desktop prototype (PySide6) | **Removed 2026-09-23** (historical) | see [[Desktop App (Native Prototype)]] (marked historical), [[Web Application as Sole Admin UI]] |
 | Automated head-count scheduler (background trigger, no button press) | Implemented (real trigger/storage; captured value is a placeholder) | `admin-ui/backend/scheduler.py`, [[Automated Head-Count Scheduler]] |
 | Dark Mode / theme toggle | Implemented (real, persisted, instant apply) | `admin-ui/frontend/js/theme.js`, [[Admin UI (Browser Prototype)]] |
-| Computer-vision detection pipeline (YOLOv8, ByteTrack, camera capture) | Partially implemented — `trash` detection only, via a manual one-off script, no ByteTrack | `detection/monitor_trash.py`, [[04 - Computer Vision]] |
-| Real event logging from live detection | Partially implemented — `trash` only, manual script (`detection/monitor_trash.py`), writes real `events` rows with an active/resolved lifecycle | [[Event Model]], [[Trash Monitoring Integration]] |
+| Computer-vision detection pipeline (YOLOv8, ByteTrack, camera capture) | Partially implemented — `trash` + `standing` detection via a manual one-off script, no ByteTrack; `standing` trained 2026-09-30 (round 4) and live-testing already found it unreliable for anyone but the one person it's been tested on | `detection/monitor.py`, [[04 - Computer Vision]] |
+| Real event logging from live detection | Partially implemented — `trash` + `standing`, manual script (`detection/monitor.py`), writes real `events` rows with an active/resolved lifecycle | [[Event Model]], [[Trash Monitoring Integration]] |
 | Real video/screenshot evidence capture | Not yet implemented (UI simulates it) | [[Evidence System]] |
 | Capstone master document (`DOC-CAP-FINAL-2026-008`) — Sections 2.1–2.6 + 3.0 architecture/AI/hardware/version-control specification | Drafted (external deliverable file, not stored in this repository) | produced from a full repository technical audit, 2026-09-24 |
 

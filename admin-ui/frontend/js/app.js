@@ -101,14 +101,26 @@ function summarizeHeadcountSchedule(schedule) {
 
 const STATUS_BOX_IDS = ["system-status", "mobile-status"];
 
+// Independent toggles -- disabling one does not gate the other (see
+// admin-ui/CLAUDE.md "Detection Enable/Disable").
+const DETECTION_TOGGLE_CATEGORIES = [
+  { key: "trash", label: "Trash Detection" },
+  { key: "standing", label: "Standing Detection" },
+];
+
 function statusBoxHtml(s, schedule) {
-  return `
+  const toggles = DETECTION_TOGGLE_CATEGORIES.map(({ key, label }) => {
+    const on = !!s.detection_enabled[key];
+    return `
     <div class="status-line detection-toggle-line">
-      <button class="toggle-switch detection-toggle ${s.detection_enabled ? "on" : ""}" role="switch" aria-checked="${s.detection_enabled}" aria-label="Toggle detection">
+      <button class="toggle-switch detection-toggle ${on ? "on" : ""}" data-category="${key}" role="switch" aria-checked="${on}" aria-label="Toggle ${label.toLowerCase()}">
         <span class="toggle-thumb"></span>
       </button>
-      <span>Detection: ${s.detection_enabled ? "Enabled" : "Disabled"}</span>
-    </div>
+      <span>${label}: ${on ? "Enabled" : "Disabled"}</span>
+    </div>`;
+  }).join("");
+  return `
+    ${toggles}
     <div class="status-rest">
       <div class="status-line"><span class="status-dot ${s.camera_connected ? "" : "warn"}"></span> Camera: ${s.camera_connected ? "Connected" : "Disconnected"}</div>
       <div class="status-line"><span class="status-dot ${s.monitoring_active ? "" : "warn"}"></span> Monitoring: ${s.monitoring_active ? "Active" : "Inactive"}</div>
@@ -128,15 +140,17 @@ function renderStatusBox() {
       const el = document.getElementById(id);
       if (!el) return;
       el.innerHTML = html;
-      el.querySelector(".detection-toggle")?.addEventListener("click", async (e) => {
-        const btn = e.currentTarget;
-        btn.disabled = true;
-        try {
-          await Api.setDetectionState(!s.detection_enabled);
-          renderStatusBox();
-        } catch (err) {
-          btn.disabled = false;
-        }
+      el.querySelectorAll(".detection-toggle").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          const category = e.currentTarget.dataset.category;
+          e.currentTarget.disabled = true;
+          try {
+            await Api.setDetectionState(category, !s.detection_enabled[category]);
+            renderStatusBox();
+          } catch (err) {
+            e.currentTarget.disabled = false;
+          }
+        });
       });
     });
   }).catch(() => {

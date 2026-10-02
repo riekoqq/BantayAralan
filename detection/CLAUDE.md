@@ -37,7 +37,38 @@ export — see `dataset/README.md`.
   you've unzipped a Roboflow export here.
 - `runs/` (gitignored) — local training output (`yolo detect train`) and
   ad-hoc camera-test recordings/analysis.
-- [`monitor_trash.py`](monitor_trash.py) — runs a trained model against a
+- [`monitor.py`](monitor.py) — **the script to run going forward** (see
+  the 2026-09-29 Prototype Scope decision). Combined `trash` + `standing`
+  real-time monitor, writes real events into admin-ui's database.
+  `--show` opens a live window with detections drawn. **As of round 4
+  (2026-09-30, see `dataset/README.md`), both classes come from ONE
+  trained model** (`--model`, e.g. `detection/runs/train4/weights/best.pt`)
+  — `standing` is now a directly-labeled bounding-box class in the same
+  Roboflow project as `trash`, not the pretrained-pose-model +
+  head-height heuristic this script briefly used before (removed
+  2026-09-30 after live testing found it structurally broken for rooms
+  with furniture at different elevations — see git history for that
+  code/docstring). Round 4's `standing` validation numbers (mAP50 0.995)
+  are strong but come from a 2-image, 6-instance split — **first live-
+  camera test (2026-09-30) already found real gaps**: `trash` still
+  false-positives on a person's shirt (same person-as-clutter confusion
+  as every prior round), `standing` degrades from a side-on view, and —
+  the more serious one — **other people besides the one in the training
+  photos aren't detected as `standing` at all**, suggesting the model may
+  have learned one person's proportions rather than a general standing
+  posture. See `detection/dataset/README.md`'s round 4 live-camera-test
+  entry before trusting this class for anyone else. **A second live test
+  (2026-10-01)**, this one with `monitor.py --show` actually writing real
+  events end-to-end (not just viewing), found a *new* `trash`
+  false-positive mode: a cast shadow near the bed, not a person's
+  clothing this time — see `detection/dataset/README.md`'s 2026-10-01
+  entry and `admin-ui/data/snapshots/202.jpg`.
+- [`yolov8n-pose.pt`](yolov8n-pose.pt) / [`yolov8s-pose.pt`](yolov8s-pose.pt)
+  — pretrained COCO pose models used by the now-removed heuristic above
+  (gitignored via the `*.pt` rule). No longer wired into anything here;
+  kept locally only as historical reference.
+- [`monitor_trash.py`](monitor_trash.py) — superseded by `monitor.py`
+  above (kept for reference/history) — runs a trained model against a
   live camera and writes real `trash` events into admin-ui's database
   (dedup/resolve lifecycle). See its own docstring for full detail;
   summary below.
@@ -81,6 +112,20 @@ python detection/monitor_trash.py \
   script's docstring for why frame-count grace measured under a second of
   real time in testing) gets marked resolved. This is a simple
   nearest-position match, **not** the proposal's ByteTrack.
+- **Respects the admin UI's Detection toggles** (added 2026-09-27,
+  **split into separate per-category toggles 2026-10-01**):
+  `TrashTracker.update()` calls `db.is_category_detection_enabled("trash")`
+  before opening a *new* event and silently skips the detection (same as a
+  below-`--min-new-conf` detection) when that category's toggle is off. An
+  already-tracked item keeps being matched/resolved regardless — the
+  toggle gates new event generation only, matching the "Detection
+  Enable/Disable" contract in `admin-ui/CLAUDE.md`. `monitor.py`'s
+  `CategoryTracker` does the same per its own `self.category`, so the
+  `trash` and `standing` toggles are fully independent — disabling one
+  doesn't affect the other. The flag is re-read from the database on every
+  candidate new-event detection rather than cached, so flipping either
+  toggle mid-run takes effect on the next frame without restarting the
+  script.
 - **Two confidence thresholds, found necessary from live testing**:
   `--conf` (default 0.3) keeps tracking an already-open item; `--min-new-conf`
   (default 0.5, higher) is required to open a *new* event. A single shared
@@ -136,14 +181,30 @@ output maps onto the existing schema without a translation layer:
 
 - `trash` — "Trash / Scattered Objects" (clutter), **floor-only** by
   working decision (2026-09-26) — see `dataset/README.md`'s Classes section.
-- `misaligned` — "Misaligned Seat" / Table. Per the architecture discussion
-  in the round log, this likely needs a separate `seat` object class plus a
-  rule-based reference-position check, not a single end-to-end visual
-  class — see `dataset/README.md` before adding more `misaligned` boxes.
+  **Active priority** as of the 2026-09-29 scope decision below.
+- `standing` — as of round 4 (2026-09-30), a **directly-labeled
+  bounding-box class in this same Roboflow project/dataset**, trained the
+  same way `trash` is — see `dataset/README.md`'s round 4 entry. This is
+  a change from how this class started (2026-09-29 scope decision, see
+  below): originally planned and briefly implemented as pose-estimation
+  based (pretrained `yolov8n-pose.pt`, no custom training data), that
+  approach was found structurally broken by live testing and removed
+  2026-09-30 — see `monitor.py`'s git history.
+- `misaligned` — "Misaligned Seat" / Table. **Deprioritized, not
+  abandoned**, as of 2026-09-29 — see
+  [Knowledge/11 - Decisions/Prototype Scope — Trash and Standing, Misaligned Deprioritized.md](<../Knowledge/11%20-%20Decisions/Prototype%20Scope%20—%20Trash%20and%20Standing%2C%20Misaligned%20Deprioritized.md>).
+  No further labeling effort goes toward this class for now, and round
+  4's dataset export has no `misaligned` boxes at all (2-class:
+  `standing`, `trash`). If it comes back into scope, the architecture
+  discussion in the round log still applies: it likely needs a separate
+  `seat` object class plus a rule-based reference-position check, not a
+  single end-to-end visual class.
 
-Only these two are in scope for the top-down/clutter camera dataset. The
-`standing` category belongs to the separate behavior-detection camera
-pipeline (ceiling-mounted) and is out of scope here.
+**Note**: [[04 - Computer Vision]] in the Knowledge base still describes
+`standing` as pose-estimation based — written before round 4's dataset
+change above and not yet reconciled with it. Flagged, not silently fixed;
+update that note (and the 2026-09-29 scope decision doc) if this
+dataset-based approach is confirmed to stick after live-camera testing.
 
 ## Honest scale caveat
 

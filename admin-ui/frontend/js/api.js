@@ -38,11 +38,11 @@ const Api = {
     if (!r.ok) throw new Error("detection_state_failed");
     return r.json();
   },
-  async setDetectionState(enabled) {
+  async setDetectionState(category, enabled) {
     const r = await fetch("/api/detection-state", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ enabled }),
+      body: JSON.stringify({ category, enabled }),
     });
     if (!r.ok) throw new Error("set_detection_state_failed");
     return r.json();

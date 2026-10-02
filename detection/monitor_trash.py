@@ -138,6 +138,13 @@ class TrashTracker:
                 self.tracked[best_id]["last_seen"] = now
                 matched_ids.add(best_id)
             elif conf >= self.min_new_conf:
+                if not db.is_category_detection_enabled("trash"):
+                    # Sidebar/mobile Trash Detection toggle is off -- gates
+                    # *new* event generation only, so this is silently
+                    # dropped just like a below-threshold detection.
+                    # Already-tracked items above still get matched/resolved
+                    # normally. Independent of the Standing Detection toggle.
+                    continue
                 event_id = db.insert_event(
                     category=self.category,
                     title=self.label,

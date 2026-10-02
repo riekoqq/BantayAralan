@@ -40,12 +40,28 @@ anywhere — per the design brief this was built from.
   date+point wins) — see
   [Knowledge/12 - Open Questions.md](<../Knowledge/12 - Open Questions.md>).
 - **Detection Enable/Disable** (`renderStatusBox()` in `app.js`,
-  `/api/detection-state`, `detection_state` table) — a real, persisted
-  toggle that gates **event generation only**. The UI must never imply that
-  disabling it stops cameras, stops the app, deletes data, or stops head
-  counting — `/api/status` reports `camera_connected` and
+  `/api/detection-state`, `detection_state` table) — real, persisted
+  toggles that gate **event generation only**. The UI must never imply
+  that disabling one stops cameras, stops the app, deletes data, or stops
+  head counting — `/api/status` reports `camera_connected` and
   `monitoring_active` as separate, always-true fields specifically so the
-  sidebar can show those as unaffected.
+  sidebar can show those as unaffected. **Split into two independent
+  per-category toggles 2026-10-01** (previously one toggle gated both
+  `trash` and `standing` together, per explicit user request to separate
+  them) — `detection_state` now has `trash_enabled`/`standing_enabled`
+  columns instead of a single `enabled` column (migrated automatically for
+  an existing DB file, see `db._migrate_detection_state_columns()`), and
+  `db.is_category_detection_enabled(category)` /
+  `set_category_detection_enabled(category, enabled)` replace the old
+  single-flag `is_detection_enabled()`. `/api/detection-state` and
+  `/api/status`'s `detection_enabled` field are now both
+  `{"trash": bool, "standing": bool}` instead of one bool — this is a
+  breaking API shape change, not additive. As of 2026-09-27,
+  `detection/monitor_trash.py` reads the `trash` toggle before opening a
+  *new* tracked event (an already-open item can still be matched/resolved
+  while its toggle is off); `detection/monitor.py`'s `CategoryTracker`
+  does the same per its own category, so `trash` and `standing` detection
+  can be turned off independently — see `detection/CLAUDE.md`.
 - **Insights & Statistics** (`frontend/js/views/insights.js`,
   `/api/statistics`, `/api/insights`, `/api/suggestions`) — one page, three
   tabs, computed for real from the `events` table (plain SQL counts/percent
@@ -250,8 +266,11 @@ one for no reason; several of these went through 2-3 wrong shapes first.
 
 
 - **Backend**: `backend/app.py` — a small Flask app. `create_app()` wires
-  routes and calls `init_db()` + `seed()` on startup (idempotent — `seed()`
-  no-ops if the DB already has rows). Routes: `/api/summary`, `/api/status`,
+  routes and calls `init_db()` on startup. **No longer auto-seeds**
+  (removed 2026-10-01, explicit user request) — starting the app leaves
+  the `events` table exactly as it is, empty or not; run `python
+  backend/seed.py` yourself when you want mock demo data. Routes:
+  `/api/summary`, `/api/status`,
   `/api/events`, `/api/events/<id>`, `/api/events/<id>/snapshot.svg`,
   `/api/detection-state` (GET/POST), `/api/headcounts` (GET only — read
   history; no manual-entry write path anymore),
@@ -338,8 +357,10 @@ under a `[data-theme="dark"]` block for Dark Mode — see above.
   backend/app.py` directly instead of `run_web.py`/`run_desktop.py` — the
   Flask static route resolves `FRONTEND_DIR` relative to `backend/app.py`'s
   parent, and `create_app()` expects to be imported, not run standalone.
-- If mock data looks stale/unchanged after editing `seed.py`, delete
-  `data/bantayaralan.db` — `seed()` only populates an empty table.
+- If mock data looks stale/unchanged after editing `seed.py`, re-run
+  `python backend/seed.py` — it only populates an empty table, so either
+  delete `data/bantayaralan.db` first or clear the `events` table. Starting
+  the app itself no longer seeds anything (see "Backend" above).
 - Evidence-unavailable rows are intentional (~10% of seeded events per
   `EVIDENCE_WEIGHTS`) — not a bug if you see "Evidence Unavailable" tags.
 - **After editing `styles.css`/`app.js`, a hash navigation (`#/events`

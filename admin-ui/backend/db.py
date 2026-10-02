@@ -140,12 +140,6 @@ def _migrate_events_status_column():
             conn.execute("UPDATE events SET status = 'resolved'")
 
 
-def is_seeded() -> bool:
-    with connection() as conn:
-        row = conn.execute("SELECT COUNT(*) AS n FROM events").fetchone()
-        return row["n"] > 0
-
-
 _DETECTION_STATE_COLUMNS = {"trash": "trash_enabled", "standing": "standing_enabled"}
 
 
@@ -188,7 +182,7 @@ def insert_event(
     """Insert a new event with status='active'. Returns the new row's id.
 
     Used by detection/monitor_trash.py (a manual, one-off script -- see its
-    own docstring) as the only real, non-seed caller so far. Position/
+    own docstring) as the only real caller. Position/
     tracking state that decides *when* to call this lives in that script's
     own memory, not in this table -- see Knowledge/05 - Events & Evidence/
     Event Model.md for why no bbox/frame linkage is stored here.

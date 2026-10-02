@@ -1,8 +1,10 @@
 """Flask app for the BantayAralan admin UI demo.
 
-Serves a small JSON API backed by mock/seeded SQLite data, plus the static
-frontend (HTML/CSS/JS). There is no camera, detection model, or real video
-pipeline behind this -- see CLAUDE.md files for implementation status.
+Serves a small JSON API backed by local SQLite data, plus the static
+frontend (HTML/CSS/JS). Events come from detection/monitor.py when it's
+run against a live camera; there is no built-in mock-data generator and no
+live video pipeline behind this app itself -- see CLAUDE.md files for
+implementation status.
 """
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -217,9 +219,9 @@ def create_app():
     def snapshot(event_id):
         """Real captured frame if detection/monitor_trash.py saved one for
         this event (data/snapshots/<id>.jpg); otherwise the generated
-        placeholder icon used by every seeded/mock event. Same URL either
-        way -- the browser reads Content-Type, not the path -- so the
-        frontend doesn't need to know which kind it's getting."""
+        placeholder icon used by any event with no real evidence file. Same
+        URL either way -- the browser reads Content-Type, not the path --
+        so the frontend doesn't need to know which kind it's getting."""
         with connection() as conn:
             row = conn.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
         if row is None or not row["snapshot_available"]:
@@ -274,7 +276,7 @@ SUGGESTION_MAP = {
 
 
 def _compute_statistics(window_days: int = 7) -> dict:
-    """Real counts/percentages computed from the (seeded, mock) events table.
+    """Real counts/percentages computed directly from the events table.
 
     Simple SQL aggregation only -- no invented formula or fabricated numbers.
     """

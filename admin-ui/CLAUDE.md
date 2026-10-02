@@ -188,10 +188,11 @@ schema level, but every code path except one always writes explicitly:
   its miss-grace window.
 - `db.list_active_events(category=None)` — reads active rows; used by
   `monitor_trash.py` to know what's currently open, not by the web UI.
-- `backend/seed.py` explicitly inserts every synthetic event as
-  `'resolved'` — seeded history is closed-out mock data, never "still
-  open." Don't change this default without checking with the user first,
-  same as the field's own existence (see the decision doc below).
+- Any legacy synthetic rows still in the database (from the now-removed
+  `backend/seed.py`) were inserted as `'resolved'` — closed-out mock
+  history, never "still open." Don't change this default without checking
+  with the user first, same as the field's own existence (see the decision
+  doc below).
 - `frontend/js/components.js`'s `statusTagHtml()` renders the badge
   (`.status-tag.active` / `.status-tag.resolved`, `--status-warning` /
   `--status-success` tokens — both have light+dark variants already).
@@ -266,10 +267,13 @@ one for no reason; several of these went through 2-3 wrong shapes first.
 
 
 - **Backend**: `backend/app.py` — a small Flask app. `create_app()` wires
-  routes and calls `init_db()` on startup. **No longer auto-seeds**
-  (removed 2026-10-01, explicit user request) — starting the app leaves
-  the `events` table exactly as it is, empty or not; run `python
-  backend/seed.py` yourself when you want mock demo data. Routes:
+  routes and calls `init_db()` on startup. **No mock-data generator exists**
+  (`backend/seed.py` removed 2026-10-02, explicit user request, after
+  auto-seeding itself was already removed 2026-10-01) — starting the app
+  leaves the `events` table exactly as it is, empty or not; there is no
+  longer a built-in way to populate it with synthetic data. Real events
+  come only from `detection/monitor.py`/`monitor_trash.py` writing into
+  the same database. Routes:
   `/api/summary`, `/api/status`,
   `/api/events`, `/api/events/<id>`, `/api/events/<id>/snapshot.svg`,
   `/api/detection-state` (GET/POST), `/api/headcounts` (GET only — read
@@ -290,11 +294,12 @@ one for no reason; several of these went through 2-3 wrong shapes first.
 - **Scheduling**: `backend/schedule_config.py` (times) +
   `backend/scheduler.py` (the background thread/trigger logic) — see
   "Automated head-count scheduler" above.
-- **Mock data**: `backend/seed.py` — deterministic-ish random generator
-  (fixed seed) producing ~42 synthetic events spread across the last 7 days,
-  all 4 categories, with a realistic mix of evidence availability (see
-  `EVIDENCE_WEIGHTS`), plus ~10 synthetic head-count sessions
-  (`seed_headcounts()`). No student-identifying content anywhere.
+- **Mock data**: removed 2026-10-02 (`backend/seed.py` deleted, along with
+  `db.py`'s `is_seeded()` helper it used). Any `events`/`head_counts` rows
+  already in `data/bantayaralan.db` from before this removal remain (a
+  pre-existing database file is not touched automatically), but there is no
+  code path left that generates new synthetic rows. Delete
+  `data/bantayaralan.db` for a genuinely empty database.
 - **Frontend**: `frontend/` — plain HTML/CSS/JS, no build step, no
   framework. Hash-based routing (`#/dashboard`, `#/events`,
   `#/events/<id>`, `#/headcount`, `#/insights`) driven by `frontend/js/app.js`.
@@ -332,8 +337,8 @@ under a `[data-theme="dark"]` block for Dark Mode — see above.
 - **No retention countdown / auto-delete UI** — evidence retention policy is
   an open decision (see root CLAUDE.md "Open decisions"); the UI must not
   imply an expiry that hasn't been decided.
-- **No student names/IDs/facial recognition** anywhere — mock data, seed
-  script, and placeholder SVGs are all written to stay clear of this; keep
+- **No student names/IDs/facial recognition** anywhere — legacy mock data
+  and placeholder SVGs are all written to stay clear of this; keep
   new mock content the same way. Head Count is aggregate-only for the same
   reason — never add per-student rows.
 - **Avoid real-time-alert framing** — copy should read as continuous
@@ -357,11 +362,12 @@ under a `[data-theme="dark"]` block for Dark Mode — see above.
   backend/app.py` directly instead of `run_web.py`/`run_desktop.py` — the
   Flask static route resolves `FRONTEND_DIR` relative to `backend/app.py`'s
   parent, and `create_app()` expects to be imported, not run standalone.
-- If mock data looks stale/unchanged after editing `seed.py`, re-run
-  `python backend/seed.py` — it only populates an empty table, so either
-  delete `data/bantayaralan.db` first or clear the `events` table. Starting
-  the app itself no longer seeds anything (see "Backend" above).
-- Evidence-unavailable rows are intentional (~10% of seeded events per
+- There is no mock-data generator anymore (see "Backend" above) — an empty
+  `events` table stays empty until `detection/monitor.py`/`monitor_trash.py`
+  writes real rows into it. Delete `data/bantayaralan.db` to start from a
+  genuinely empty database.
+- Evidence-unavailable rows in any legacy seeded data are intentional (~10%
+  of those events per the now-removed
   `EVIDENCE_WEIGHTS`) — not a bug if you see "Evidence Unavailable" tags.
 - **After editing `styles.css`/`app.js`, a hash navigation (`#/events`
   etc.) will NOT pick up the change** — this is a single-page app with
@@ -379,7 +385,6 @@ under a `[data-theme="dark"]` block for Dark Mode — see above.
 pip install -r requirements.txt   # Flask only, by default
 python run_web.py                 # web app mode — http://127.0.0.1:5057
 python run_desktop.py             # desktop window mode — needs `pip install pywebview`
-python backend/seed.py            # force-reseed mock data (drops existing rows)
 python -m py_compile run_web.py run_desktop.py backend/*.py   # quick syntax check
 ```
 

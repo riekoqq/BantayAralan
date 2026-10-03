@@ -36,13 +36,21 @@ fine on paper before live testing found its structural flaw; give this
 the same live-camera scrutiny before trusting it, per detection/dataset/
 README.md's round 4 "next round should" note.
 
-Dedup/resolve/snapshot/toggle behavior mirrors monitor_trash.py exactly --
+**Dwell threshold (added 2026-10-03)**: a detection is only logged as an
+event after it has stayed in place for `--trash-min-seconds` (default 10) /
+`--standing-min-seconds` (default 5), so an item dropped and picked straight
+back up, or a brief flicker or pass-through, is never logged. The defaults
+are starting guesses, not validated values -- tune from live use; 0 logs
+immediately (the old behavior). The snapshot is saved when the event is
+logged, i.e. after the dwell, so it shows the item still there. See
+`CategoryTracker`. monitor_trash.py does NOT have this.
+
+Dedup/resolve/snapshot/toggle behavior otherwise mirrors monitor_trash.py --
 see that file's docstring for the full reasoning (position-based matching,
 wall-clock miss-grace, two confidence thresholds, admin-ui Detection
 toggle respected, known limitation about restart losing tracked state).
 Not repeated here to avoid the two docstrings drifting out of sync in
-different words -- if you change this behavior, check monitor_trash.py's
-docstring still describes its own copy accurately.
+different words.
 """
 import argparse
 import sys
@@ -63,6 +71,14 @@ SNAPSHOTS_DIR = ADMIN_UI_ROOT / "data" / "snapshots"
 
 MATCH_DISTANCE = 0.05
 MISS_GRACE_SECONDS = 5.0
+# How long a not-yet-logged candidate can go unseen before its dwell timer
+# restarts -- short, so a dropped-then-picked-up item doesn't accumulate time.
+PENDING_GRACE_SECONDS = 1.5
+
+# Default dwell before an event is logged, per category. A starting guess,
+# not a validated value -- tune with --trash-min-seconds / --standing-min-seconds.
+DEFAULT_TRASH_MIN_SECONDS = 10.0
+DEFAULT_STANDING_MIN_SECONDS = 5.0
 
 # BGR draw colors per category, used only when --show is passed.
 DRAW_COLORS = {"trash": (0, 0, 255), "standing": (0, 255, 0)}
@@ -100,49 +116,92 @@ class CategoryTracker:
     clock miss-grace).
 
     Matching (continuing an already-open event) only checks position,
-    never `conf`. Only *creating a new* event checks
-    `conf >= min_new_conf`."""
+    never `conf`. Only *starting* a new event checks
+    `conf >= min_new_conf`.
 
-    def __init__(self, category: str, label: str, min_new_conf: float, match_distance: float = MATCH_DISTANCE):
+    **Dwell threshold** (`min_seconds`): a qualifying detection first
+    becomes a *pending candidate*, not an event. It is only logged once
+    it has stayed in (roughly) the same place for `min_seconds` of wall-
+    clock time. A candidate unseen for `PENDING_GRACE_SECONDS` is dropped
+    and its timer starts over, so something dropped and picked straight
+    back up, or a brief flicker or pass-through, never reaches the
+    database. A candidate that briefly disappears for less than the grace
+    period keeps its timer. `min_seconds=0` logs immediately (the old
+    behavior)."""
+
+    def __init__(self, category: str, label: str, min_new_conf: float, match_distance: float = MATCH_DISTANCE,
+                 min_seconds: float = 0.0):
         self.category = category
         self.label = label
         self.min_new_conf = min_new_conf
         self.match_distance = match_distance
+        self.min_seconds = min_seconds
         self.tracked = {}  # event_id -> {"center": (x, y), "last_seen": float}
+        self.pending = []  # candidates not yet logged: {"center", "first_seen", "last_seen"}
+
+    def _match(self, items, center, taken):
+        best, best_dist = None, None
+        for key, state in items:
+            if key in taken:
+                continue
+            dist = _center_distance(center, state["center"])
+            if dist <= self.match_distance and (best_dist is None or dist < best_dist):
+                best, best_dist = key, dist
+        return best
 
     def update(self, detections, frame=None):
         """detections: list of (cx, cy, bw, bh, conf) normalized boxes,
         already filtered to this category's class name by the caller."""
         now = time.time()
         matched_ids = set()
+        matched_pending = set()
         for cx, cy, bw, bh, conf in detections:
-            best_id, best_dist = None, None
-            for event_id, state in self.tracked.items():
-                if event_id in matched_ids:
-                    continue
-                dist = _center_distance((cx, cy), state["center"])
-                if dist <= self.match_distance and (best_dist is None or dist < best_dist):
-                    best_id, best_dist = event_id, dist
-
+            best_id = self._match(self.tracked.items(), (cx, cy), matched_ids)
             if best_id is not None:
                 self.tracked[best_id]["center"] = (cx, cy)
                 self.tracked[best_id]["last_seen"] = now
                 matched_ids.add(best_id)
+                continue
+
+            idx = self._match(enumerate(self.pending), (cx, cy), matched_pending)
+            if idx is not None:
+                cand = self.pending[idx]
+                cand["center"] = (cx, cy)
+                cand["last_seen"] = now
+                cand["best_conf"] = max(cand["best_conf"], conf)
+                matched_pending.add(idx)
             elif conf >= self.min_new_conf:
-                if not db.is_category_detection_enabled(self.category):
-                    continue
-                event_id = db.insert_event(
-                    category=self.category,
-                    title=self.label,
-                    description=f"{self.label} detected (confidence {conf:.2f})",
-                    snapshot_available=1 if frame is not None else 0,
-                )
-                if frame is not None:
-                    _save_snapshot(frame, event_id, (cx, cy, bw, bh), f"{self.category} {conf:.2f}",
-                                    DRAW_COLORS.get(self.category, (0, 0, 255)))
-                self.tracked[event_id] = {"center": (cx, cy), "last_seen": now}
-                matched_ids.add(event_id)
-                print(f"[new {self.category}] #{event_id} at ({cx:.2f}, {cy:.2f}) conf={conf:.2f}")
+                self.pending.append({"center": (cx, cy), "first_seen": now, "last_seen": now, "best_conf": conf})
+                idx = len(self.pending) - 1
+                matched_pending.add(idx)
+                cand = self.pending[idx]
+            else:
+                continue
+
+            if now - cand["first_seen"] < self.min_seconds:
+                continue
+            if not db.is_category_detection_enabled(self.category):
+                continue
+            conf = cand["best_conf"]
+            event_id = db.insert_event(
+                category=self.category,
+                title=self.label,
+                description=f"{self.label} detected (confidence {conf:.2f})",
+                snapshot_available=1 if frame is not None else 0,
+            )
+            if frame is not None:
+                _save_snapshot(frame, event_id, (cx, cy, bw, bh), f"{self.category} {conf:.2f}",
+                                DRAW_COLORS.get(self.category, (0, 0, 255)))
+            self.tracked[event_id] = {"center": (cx, cy), "last_seen": now}
+            matched_ids.add(event_id)
+            cand["logged"] = True
+            print(f"[new {self.category}] #{event_id} at ({cx:.2f}, {cy:.2f}) conf={conf:.2f} "
+                  f"(held {now - cand['first_seen']:.1f}s)")
+
+        self.pending = [
+            c for i, c in enumerate(self.pending)
+            if not c.get("logged") and (i in matched_pending or now - c["last_seen"] < PENDING_GRACE_SECONDS)
+        ]
 
         for event_id in list(self.tracked):
             if event_id in matched_ids:
@@ -162,6 +221,10 @@ def main():
     parser.add_argument("--standing-min-new-conf", type=float, default=0.5, help="Higher threshold to open a NEW standing event")
     parser.add_argument("--standing-match-distance", type=float, default=0.1,
                          help="Looser than trash's default (0.05) -- a standing person moves around more than a static object")
+    parser.add_argument("--trash-min-seconds", type=float, default=DEFAULT_TRASH_MIN_SECONDS,
+                         help="How long a trash detection must stay in place before it is logged as an event (0 = log immediately). Default is a starting guess, not a validated value.")
+    parser.add_argument("--standing-min-seconds", type=float, default=DEFAULT_STANDING_MIN_SECONDS,
+                         help="How long a standing detection must persist before it is logged (0 = log immediately). Default is a starting guess, not a validated value.")
     parser.add_argument("--iou", type=float, default=0.5)
     parser.add_argument("--show", action="store_true",
                          help="Open a live window showing detections (needs a real display -- see live_view.py's notes on headless/remote shells)")
@@ -172,9 +235,11 @@ def main():
     db.init_db()
 
     model = YOLO(args.model)
-    trash_tracker = CategoryTracker(category="trash", label=db.CATEGORY_LABELS["trash"], min_new_conf=args.min_new_conf)
+    trash_tracker = CategoryTracker(category="trash", label=db.CATEGORY_LABELS["trash"], min_new_conf=args.min_new_conf,
+                                     min_seconds=args.trash_min_seconds)
     standing_tracker = CategoryTracker(category="standing", label=db.CATEGORY_LABELS["standing"],
-                                        min_new_conf=args.standing_min_new_conf, match_distance=args.standing_match_distance)
+                                        min_new_conf=args.standing_min_new_conf, match_distance=args.standing_match_distance,
+                                        min_seconds=args.standing_min_seconds)
     trackers = {"trash": trash_tracker, "standing": standing_tracker}
 
     cap = cv2.VideoCapture(args.source)

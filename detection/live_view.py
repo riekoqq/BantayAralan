@@ -42,10 +42,15 @@ def main():
                          help="Window width in pixels -- the camera's native resolution (e.g. 2304x1296) is too large for most screens, so the displayed frame is resized to display-width x display-height. Does not affect detection, which still runs on the full-resolution frame.")
     parser.add_argument("--display-height", type=int, default=900,
                          help="Window height in pixels (default 1600x900, 16:9 -- matches this camera's native aspect ratio exactly, so no letterboxing/stretching).")
+    parser.add_argument("--fullscreen", action="store_true",
+                         help="Open the window fullscreen instead of display-width x display-height (the frame is stretched to the screen, fine for a 16:9 display).")
     args = parser.parse_args()
 
     model = YOLO(args.model)
     window_name = "BantayAralan -- Live Detection (press q to quit)"
+    if args.fullscreen:
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     prev_time = time.time()
     print(f"Opening {args.source} -- press 'q' in the window to quit.")

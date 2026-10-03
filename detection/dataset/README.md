@@ -436,3 +436,119 @@ rather than a guess from a single frame.
 shadow on it** (from a person or furniture), not just a clean floor in
 flat lighting, so the model gets a direct signal that shadows aren't
 clutter either.
+
+### Round 5 — 2026-10-03 (Roboflow dataset version 6)
+
+- **Source images**: 145 total, split **102 train / 22 valid / 21 test**
+  (~70/15/15) — up from round 4's 47 images (43/2/2). The split was
+  deliberately rebalanced for this round: v5 (same 145 images) had been
+  exported with a 141/2/2 split, which left the validation set at 2 images
+  as before, so it was discarded in favor of v6 before any training ran on
+  it.
+- **Class split** (boxes): `standing` 131 train / 29 valid / 37 test (197
+  total); `trash` 191 / 39 / 44 (274 total). Background (no-box) images:
+  8 train / 1 valid / 1 test. Both classes are present in every split.
+  `misaligned` remains absent (deprioritized, see the 2026-09-29
+  decision). Adds more people (including children) to `standing` per the
+  round 4 live-test finding that other people weren't detected.
+- **Pre-processing**: resize to 640×640 (stretch); **no augmentation**.
+  v6 dropped the auto-orientation step v5 had — unlikely to matter for
+  fixed-camera screenshots.
+- **Model**: local RTX 2060, `yolov8n.pt`, same command as round 4 (`yolo
+  detect train data=detection/dataset/data.yaml model=yolov8n.pt
+  epochs=150 patience=30 imgsz=640 batch=8 device=0 cache=True`). Ran all
+  150 epochs (~7 min), no early stop.
+- **Result** (best.pt, validated on the **22-image** valid split, 88
+  instances): overall precision 0.912, recall 0.783, mAP50 0.848,
+  mAP50-95 0.659. Per class: `standing` P 0.952 / R 0.976 / mAP50 0.982 /
+  mAP50-95 0.832 (42 instances); `trash` P 0.871 / R 0.589 / mAP50 0.714 /
+  mAP50-95 0.485 (46 instances). Inference ~2.6 ms/image.
+- **Read this carefully before comparing to round 4**: the validation set
+  is different (22 images vs. round 4's 2), so these numbers are **not
+  directly comparable** to round 4's. They're also more meaningful in
+  their own right — 88 instances instead of 14 — though still a small,
+  single-room dataset, and valid shares the room, camera, and (largely)
+  the person with train, so they likely flatter real-world performance.
+  `trash` recall (0.589) is the weakest number and the one to watch:
+  roughly 4 in 10 labeled trash items are being missed.
+- **Not yet done**: the 21-image test split wasn't evaluated, and **no
+  live-camera test has been run on this model** — every prior round's
+  validation numbers looked better than live behavior (the `standing`
+  generalization gap and the shadow false positive were both found only
+  live). Treat as unconfirmed until tested live, ideally with people not
+  in the training data.
+- **Weights**: `detection/runs/train5/weights/best.pt` (local only, not
+  committed).
+- **Roboflow project link**: `justins-workspace-banrr/bantayaralan`
+  (dataset version 6).
+
+### Model size comparison — 2026-10-03 (yolov8n vs. yolov8s, round 5 / v6 data)
+
+Same v6 dataset, split, and hyperparameters as round 5; only the model
+differs (`train5` = `yolov8n`, `train5_s` = `yolov8s`). Both validated on
+the 22-image valid split (88 instances). Single run each, one seed.
+
+| | P | R | mAP50 | mAP50-95 | `standing` P / R | `trash` P / R | Inference | Params |
+|---|---|---|---|---|---|---|---|---|
+| `yolov8n` | **0.912** | 0.783 | 0.848 | **0.659** | **0.952** / 0.976 | **0.871** / 0.589 | 2.6 ms | 3.0M |
+| `yolov8s` | 0.878 | **0.843** | **0.858** | 0.656 | 0.927 / 0.952 | 0.828 / **0.734** | 5.6 ms | 11.1M |
+
+- **Precision**: `yolov8n` is higher overall (0.912 vs 0.878) and in each
+  class. **Recall**: `yolov8s` is higher, mainly on `trash` (0.734 vs
+  0.589, i.e. it misses fewer items). mAP50-95 is effectively tied and
+  mAP50 differs by 0.01. So `yolov8s` trades some precision for recall on
+  `trash`; it is not a clear across-the-board win.
+- **Cost**: ~2x slower inference (still far above real-time on this GPU),
+  ~3.7x the parameters, and training took ~23 min vs. ~7 min.
+- **Caveat**: these gaps are small on 88 instances from one run each and
+  could be seed noise; validation numbers have repeatedly differed from
+  live behavior in earlier rounds. Which model is better in practice
+  (especially `trash` false positives like shadows/clothing vs. misses) is
+  **not decided** — needs a live-camera comparison.
+- **Weights**: `detection/runs/train5/weights/best.pt` (`yolov8n`) and
+  `detection/runs/train5_s/weights/best.pt` (`yolov8s`), both local only.
+
+### Live camera test — 2026-10-03 (round 5: yolov8n vs. yolov8s, same frames, via `live_compare.py`)
+
+First live look at the round 5 models, both run on the **same camera
+frames** side by side (`detection/live_compare.py`, one RTSP connection,
+visual only). **In progress** — the user is continuing with more people;
+this entry records the first observations only (one scene, not a
+systematic test).
+
+- **`standing` detected a person not in the training data**: a standing
+  person who isn't in any training image was boxed by both models
+  (`yolov8n` 0.90, `yolov8s` 0.88), while a second person seated at the
+  desk was correctly **not** boxed by either. This is the first live
+  evidence that round 5's added people helped the generalization gap found
+  in round 4 — but it is one person, so it does not close the gap. Next
+  step (user's plan): people with different body composition.
+- **`yolov8n` vs. `yolov8s` differ on a floor bag**: a backpack sitting
+  properly on the floor against the wall was boxed as `trash` (0.84) by
+  `yolov8s` but **not** by `yolov8n`. Per the user, a properly placed bag is
+  not trash, so this is a `yolov8s` false positive. Consistent with the
+  validation precision gap (`yolov8n` 0.912 vs. `yolov8s` 0.878), but a
+  single frame, not a measured rate.
+- **Otherwise near-identical**: both flagged the same small floor item
+  as `trash` (0.84 / 0.88) and agreed on `standing`. The per-frame ms
+  overlay read ~12 ms for both here, which is not informative for
+  comparing speed (it includes full-frame handling and a shared GPU, unlike
+  the 2.6 vs. 5.6 ms validation figures).
+- **Tentative lean**: `yolov8n` — equal-or-better in everything observed,
+  ~2x faster in validation, much smaller. Not a decision until more people
+  and conditions are tried; `yolov8s`'s recall advantage on `trash` (0.734
+  vs. 0.589 in validation) hasn't been checked live yet (needs a scene with
+  several small floor items).
+
+**Outcome of the 2026-10-03 live testing (user's assessment)**: "looks
+good" — a clear improvement over round 4 in live use (a person not in the
+training data is detected as `standing`; a properly placed bag is not
+flagged by `yolov8n`). The user's own caveat: the dataset likely **still
+lacks diversity**, so this is better, not validated. `yolov8n`
+(`detection/runs/train5/weights/best.pt`) is the model in use going
+forward; `yolov8s`'s only observed advantage (validation `trash` recall)
+was not exercised live. Remaining gaps to cover before treating `standing`
+as reliable: people with other body compositions/heights (the user's next
+test), side/rear views (round 4 finding, not re-tested), low-light/night
+(still zero examples), and the shadow-on-floor negative (round 4 finding,
+not re-tested on this model).

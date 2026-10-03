@@ -40,7 +40,12 @@ export — see `dataset/README.md`.
 - [`monitor.py`](monitor.py) — **the script to run going forward** (see
   the 2026-09-29 Prototype Scope decision). Combined `trash` + `standing`
   real-time monitor, writes real events into admin-ui's database.
-  `--show` opens a live window with detections drawn. **As of round 4
+  `--show` opens a live window with detections drawn. **Dwell threshold
+  (2026-10-03)**: a detection is only logged after it stays in place for
+  `--trash-min-seconds` (default 10) / `--standing-min-seconds` (default 5)
+  — so a dropped-then-picked-up item or a brief flicker isn't logged. The
+  defaults are guesses to tune from live use, not validated numbers; `0`
+  restores log-immediately. `monitor_trash.py` doesn't have this. **As of round 4
   (2026-09-30, see `dataset/README.md`), both classes come from ONE
   trained model** (`--model`, e.g. `detection/runs/train4/weights/best.pt`)
   — `standing` is now a directly-labeled bounding-box class in the same
@@ -57,7 +62,12 @@ export — see `dataset/README.md`.
   photos aren't detected as `standing` at all**, suggesting the model may
   have learned one person's proportions rather than a general standing
   posture. See `detection/dataset/README.md`'s round 4 live-camera-test
-  entry before trusting this class for anyone else. **A second live test
+  entry before trusting this class for anyone else. **Update, round 5
+  (2026-10-03, `train5` = `yolov8n`, 145 images / ~70-15-15 split)**: in
+  live use a person not in the training data *was* detected as `standing`
+  and the user judged it "far better" — but they flag the dataset as still
+  lacking diversity (other body compositions, side views, low light are
+  untested), so this is improved, not validated. **A second live test
   (2026-10-01)**, this one with `monitor.py --show` actually writing real
   events end-to-end (not just viewing), found a *new* `trash`
   false-positive mode: a cast shadow near the bed, not a person's
@@ -87,6 +97,20 @@ export — see `dataset/README.md`.
       --source "rtsp://user:pass@<camera-ip>:554/stream1"
   ```
   Press `q` in the window to quit.
+- [`live_compare.py`](live_compare.py) — added 2026-10-03. Runs **two**
+  models on the **same** camera frames from one RTSP connection (this
+  camera has a low concurrent-connection limit, so two `live_view.py`
+  windows would risk starving the stream and would also see different
+  frames), one window per model, with a per-model ms readout. Visual only,
+  no database writes. Used for the round 5 `yolov8n` vs. `yolov8s`
+  comparison — see `dataset/README.md`. Needs a real display, like
+  `live_view.py`:
+  ```bash
+  python detection/live_compare.py \
+      --model-a detection/runs/train5/weights/best.pt --label-a yolov8n \
+      --model-b detection/runs/train5_s/weights/best.pt --label-b yolov8s \
+      --source "rtsp://user:pass@<camera-ip>:554/stream1"
+  ```
 
 ## monitor_trash.py
 

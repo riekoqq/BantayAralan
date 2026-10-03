@@ -104,9 +104,13 @@ round 4 live-camera-test entry for full detail.
 dedup/resolve loop, run manually via `detection/monitor.py`, writing real
 events into `admin-ui`. `standing` is also **Partially Implemented** as of
 round 4 (trained, wired into `monitor.py`, writing real events) but
-**live-testing has already found it unreliable for anyone but the one
-person it's been tested on** — treat as a working pipeline, not a working
-detector yet. `trash` has its own open reliability gap too: a 2026-10-01
+**round 4 live-testing found it unreliable for anyone but the one
+person it had been tested on**. Round 5 (2026-10-03, 145 images, more
+people added, `yolov8n`) improved this in live use — a person not in the
+training data was detected — but the user's own assessment is the dataset
+still lacks diversity, and other body compositions, side views, and low
+light haven't been tested. Treat as a working pipeline with an improving,
+not yet validated, detector. `trash` has its own open reliability gap too: a 2026-10-01
 live test (via `monitor.py --show`, writing real events end-to-end) found
 a cast shadow misread as `trash`, a different false-positive mode than
 the person's-clothing confusion logged in every earlier round — see

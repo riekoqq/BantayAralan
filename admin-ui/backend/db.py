@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS head_counts (
 -- nothing generates those automatically.
 CREATE TABLE IF NOT EXISTS detection_state (
     id INTEGER PRIMARY KEY CHECK (id = 1),
-    trash_enabled INTEGER NOT NULL DEFAULT 1,
-    standing_enabled INTEGER NOT NULL DEFAULT 1,
+    trash_enabled INTEGER NOT NULL DEFAULT 0,
+    standing_enabled INTEGER NOT NULL DEFAULT 0,
     updated_at TEXT NOT NULL
 );
 """
@@ -87,12 +87,14 @@ def init_db():
 
 
 def ensure_detection_state():
-    """Make sure the single detection_state row exists, defaulting to both
-    categories enabled."""
+    """Make sure the single detection_state row exists. Both categories
+    default to DISABLED (changed 2026-10-03) so nothing is logged until
+    someone turns a toggle on. Only applies when the row is first created --
+    an existing database keeps whatever it already has."""
     with connection() as conn:
         conn.execute(
             "INSERT OR IGNORE INTO detection_state (id, trash_enabled, standing_enabled, updated_at) "
-            "VALUES (1, 1, 1, ?)",
+            "VALUES (1, 0, 0, ?)",
             (datetime.now().isoformat(timespec="seconds"),),
         )
 
@@ -108,8 +110,8 @@ def _migrate_detection_state_columns():
     with connection() as conn:
         cols = {row["name"] for row in conn.execute("PRAGMA table_info(detection_state)")}
         if "enabled" in cols and "trash_enabled" not in cols:
-            conn.execute("ALTER TABLE detection_state ADD COLUMN trash_enabled INTEGER NOT NULL DEFAULT 1")
-            conn.execute("ALTER TABLE detection_state ADD COLUMN standing_enabled INTEGER NOT NULL DEFAULT 1")
+            conn.execute("ALTER TABLE detection_state ADD COLUMN trash_enabled INTEGER NOT NULL DEFAULT 0")
+            conn.execute("ALTER TABLE detection_state ADD COLUMN standing_enabled INTEGER NOT NULL DEFAULT 0")
             conn.execute("UPDATE detection_state SET trash_enabled = enabled, standing_enabled = enabled")
 
 

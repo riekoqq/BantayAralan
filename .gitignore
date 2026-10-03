@@ -38,3 +38,11 @@ Team8_Prior Art Search.docx
 
 # demo/screen recordings — kept locally, not tracked in git
 *.mp4
+
+# prototype papers, defense slides/scripts, and proposal PDFs at the repo
+# root — deliverable documents, kept locally, same treatment as documents/
+/*.docx
+/*.pptx
+/*.pdf
+# Office lock/temp files
+~$*

@@ -61,7 +61,12 @@ anywhere — per the design brief this was built from.
   *new* tracked event (an already-open item can still be matched/resolved
   while its toggle is off); `detection/monitor.py`'s `CategoryTracker`
   does the same per its own category, so `trash` and `standing` detection
-  can be turned off independently — see `detection/CLAUDE.md`.
+  can be turned off independently — see `detection/CLAUDE.md`. **Both
+  toggles default to OFF** (changed 2026-10-03, explicit user request), so
+  nothing is logged until one is switched on in the sidebar. The default
+  only applies when `detection_state` is first created
+  (`ensure_detection_state()`); an existing database keeps its current
+  values.
 - **Insights & Statistics** (`frontend/js/views/insights.js`,
   `/api/statistics`, `/api/insights`, `/api/suggestions`) — one page, three
   tabs, computed for real from the `events` table (plain SQL counts/percent
